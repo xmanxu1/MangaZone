@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Leyendo: Vagabond</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white">
+    <nav class="p-4 bg-zinc-900 flex justify-between">
+        <a href="index.html" class="text-orange-500 font-bold">← Volver al Inicio</a>
+        <span>Capítulo 1</span>
+    </nav>
+    <div class="max-w-[800px] mx-auto py-2" id="lector"></div>
+    <script>
+        const paginas = [
+            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
+            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg"
+        ];
+        const contenedor = document.getElementById('lector');
+        paginas.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = "w-full mb-1";
+            contenedor.appendChild(img);
+        });
+    </script>
+</body>
+</html>
