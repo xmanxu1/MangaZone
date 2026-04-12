@@ -3,132 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone - Premium</title>
+    <title>MangaZone - Estilo Original</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --sidebar-bg: #12151c;
+            --accent: #ff6700; /* Naranja como el de tu imagen */
+            --text-main: #ffffff;
+            --text-dim: #9aa1a9;
+        }
+
         body {
-            background: linear-gradient(-45deg, #0b0e14, #1a1d24, #0b0e14);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             margin: 0;
-            padding: 20px;
+            display: flex;
             min-height: 100vh;
         }
 
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        /* Barra Lateral */
+        nav {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            padding: 20px;
+            border-right: 1px solid #2d333b;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        header h1 {
-            text-align: center;
-            color: #3b82f6;
-            font-size: 3rem;
-            text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-            margin-bottom: 40px;
+        .logo {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 20px;
         }
 
-        #contenedor-mangas {
+        .nav-item {
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .nav-item:hover {
+            background: #1a1d24;
+            color: white;
+        }
+
+        /* Contenido Principal */
+        main {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Hero Banner (Arriba) */
+        .hero-banner {
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            padding: 0 50px;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to right, rgba(11,14,20,1) 30%, rgba(11,14,20,0.4) 100%);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            display: flex;
+            gap: 25px;
+        }
+
+        .hero-poster {
+            width: 180px;
+            height: 260px;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+
+        .hero-text h2 { font-size: 2.5rem; margin: 0; }
+        .hero-text p { color: var(--text-dim); line-height: 1.5; margin: 15px 0; }
+
+        .btn-orange {
+            background: var(--accent);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        .btn-orange:hover { transform: scale(1.05); filter: brightness(1.1); }
+
+        /* Sección de Mangas Populares */
+        .section-title {
+            padding: 20px 50px;
+            font-size: 1.2rem;
+            border-left: 4px solid var(--accent);
+            margin: 20px 0;
+        }
+
+        #grid-mangas {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 0 50px 50px 50px;
         }
 
         .manga-card {
-            background: rgba(26, 29, 36, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
+            background: #1a1d24;
+            border-radius: 8px;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .manga-card:hover {
-            transform: scale(1.05);
-            border-color: #3b82f6;
-        }
-
-        .manga-card img {
-            width: 100%;
-            height: 380px;
-            object-fit: cover;
-        }
-
-        .info {
-            padding: 20px;
-            text-align: center;
-        }
-
-        .info h3 {
-            margin: 0 0 10px 0;
-            color: #3b82f6;
-            font-size: 1.4rem;
-        }
-
-        .btn-leer {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
             transition: 0.3s;
-            text-transform: uppercase;
-            width: 100%;
-            text-decoration: none;
-            display: inline-block;
         }
 
-        .btn-leer:hover {
-            background: #2563eb;
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
-            transform: translateY(-2px);
-        }
+        .manga-card:hover { transform: translateY(-5px); }
+        .manga-card img { width: 100%; height: 250px; object-fit: cover; }
+        .manga-card-info { padding: 10px; font-size: 0.9rem; text-align: center; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>MANGAZONE</h1>
-    </header>
+    <nav>
+        <div class="logo">MangaZone</div>
+        <a href="#" class="nav-item">🏠 Inicio</a>
+        <a href="#" class="nav-item">📚 Biblioteca</a>
+        <a href="#" class="nav-item">🔥 Tendencias</a>
+    </nav>
 
-    <div id="contenedor-mangas"></div>
+    <main>
+        <div id="hero-area">
+            </div>
+
+        <div class="section-title">Mangas Populares</div>
+        <div id="grid-mangas"></div>
+    </main>
 
     <script>
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co';
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function cargar() {
+        async function cargarMangaDexStyle() {
             const { data, error } = await _supabase.from('Mangas').select('*');
-            
             if (error) return;
 
-            const lista = document.getElementById('contenedor-mangas');
-            lista.innerHTML = '';
+            const heroArea = document.getElementById('hero-area');
+            const grid = document.getElementById('grid-mangas');
 
-            data.forEach(manga => {
-                const tituloReal = manga['título'] || manga['titulo'] || 'Sin título';
-                // Usamos la columna "URL del banner" o "banner_url" para el enlace
-                const enlaceManga = manga['URL del banner'] || manga['banner_url'] || '#';
-                
-                lista.innerHTML += `
-                    <div class="manga-card">
-                        <img src="${manga.portada_url}" alt="${tituloReal}">
-                        <div class="info">
-                            <h3>${tituloReal}</h3>
-                            <a href="${enlaceManga}" target="_blank" class="btn-leer">Leer Ahora</a>
+            // 1. Ponemos el primer manga en el Banner Grande (estilo imagen image_818f4d.png)
+            const destacado = data[0];
+            const tituloDestacado = destacado['título'] || destacado['titulo'];
+            const linkDestacado = destacado['URL del banner'] || destacado['banner_url'];
+
+            heroArea.innerHTML = `
+                <div class="hero-banner" style="background-image: url('${destacado.portada_url}')">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <img src="${destacado.portada_url}" class="hero-poster">
+                        <div class="hero-text">
+                            <h2>${tituloDestacado}</h2>
+                            <p>${destacado.sinopsis || ''}</p>
+                            <a href="${linkDestacado}" target="_blank" class="btn-orange">Leer Capítulo 1</a>
                         </div>
-                    </div>`;
+                    </div>
+                </div>
+            `;
+
+            // 2. Llenamos el resto en el catálogo de abajo
+            data.forEach(manga => {
+                grid.innerHTML += `
+                    <div class="manga-card">
+                        <img src="${manga.portada_url}">
+                        <div class="manga-card-info">
+                            ${manga['título'] || manga['titulo']}
+                        </div>
+                    </div>
+                `;
             });
         }
-        cargar();
+
+        cargarMangaDexStyle();
     </script>
 </body>
 </html>
