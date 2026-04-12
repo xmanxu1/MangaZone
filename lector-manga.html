@@ -7,8 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background: #000; color: white; margin: 0; }
-        
-        /* LOGO NEÓN NARANJA */
         .neon-logo {
             color: #fff;
             text-shadow: 0 0 10px #ff6700, 0 0 20px #ff6700;
@@ -17,8 +15,6 @@
             letter-spacing: 2px;
             text-decoration: none;
         }
-
-        /* NAVEGACIÓN SUPERIOR OSCURA */
         .nav-lector {
             background: rgba(10, 10, 10, 0.95);
             border-bottom: 1px solid #222;
@@ -29,15 +25,12 @@
             top: 0;
             z-index: 100;
         }
-
-        /* CONTENEDOR DE LA IMAGEN (SIN BARRAS AZULES) */
         .manga-wrapper {
             display: flex;
             justify-content: center;
             padding: 20px 0;
             background: #000;
         }
-
         #manga-img {
             max-width: 100%;
             height: auto;
@@ -60,13 +53,17 @@
     </div>
 
     <script>
-        // Este script agarra el link de la URL (el que le pasó el botón naranja)
+        // 1. Buscamos el link en la URL de la ventana
         const urlParams = new URLSearchParams(window.location.search);
         const urlFinal = urlParams.get('url');
 
+        // 2. Si el link existe, se lo inyectamos a la imagen
         if (urlFinal) {
-            // Reemplaza la imagen por la que está en Supabase
-            document.getElementById('manga-img').src = urlFinal;
+            document.getElementById('manga-img').src = decodeURIComponent(urlFinal);
+        } else {
+            // Si no hay link, avisamos en la consola
+            console.error("No se encontró ningún enlace de imagen.");
+            document.querySelector('img').alt = "Error: Enlace no encontrado.";
         }
     </script>
 </body>
