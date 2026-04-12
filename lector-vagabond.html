@@ -95,3 +95,17 @@
 
         // FUNCIÓN PARA SALTAR DE CAPÍTULO
         function saltarACapitulo(urlArchivo) {
+            // Esto redirige la web al archivo que elijas en el menú
+            window.location.href = urlArchivo;
+        }
+
+        actualizarLector();
+
+        // Control por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight") cambiarPagina(1);
+            if (e.key === "ArrowLeft") cambiarPagina(-1);
+        });
+    </script>
+</body>
+</html>
