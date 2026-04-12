@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaZone | Lector Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #050505; color: white; margin: 0; overflow-x: hidden; }
+        
+        /* LOGO NEÓN MANGAZONE */
+        .neon-logo {
+            color: #fff;
+            text-shadow: 0 0 7px #ff6700, 0 0 10px #ff6700, 0 0 21px #ff6700;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-decoration: none;
+        }
+
+        /* NAVEGACIÓN OSCURA */
+        .reader-nav {
+            background: rgba(15, 15, 15, 0.95);
+            border-bottom: 1px solid #222;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-nav {
+            background: #1a1a1a;
+            padding: 8px 20px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            font-weight: bold;
+            transition: 0.3s;
+            color: #ccc;
+        }
+
+        .btn-nav:hover {
+            background: #ff6700;
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 103, 0, 0.4);
+        }
+
+        /* CONTENEDOR DE LA IMAGEN */
+        .manga-frame {
+            display: flex;
+            justify-content: center;
+            background: #000;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        #manga-img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="reader-nav px-6">
+        <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
+            <a href="index.html" class="neon-logo text-xl">MangaZone</a>
+            
+            <div class="flex gap-4">
+                <button class="btn-nav" onclick="window.history.back()">VOLVER</button>
+                <div class="flex flex-col items-center">
+                    <span class="text-orange-500 font-bold">Capítulo 1</span>
+                    <span class="text-[10px] text-zinc-500 uppercase">Leyendo ahora</span>
+                </div>
+            </div>
+            
+            <div class="hidden md:block text-zinc-700 text-[10px] font-bold tracking-[0.3em]">MODO LECTURA</div>
+        </div>
+    </nav>
+
+    <div class="manga-frame">
+        <img id="manga-img" src="https://i.ibb.co/jjDtvGDT/Captura-de-pantalla-2026-04-12-182721.jpg" alt="Manga">
+    </div>
+
+    <script>
+        // Si más adelante quieres que este link cambie según el manga,
+        // usaremos Supabase para cambiar el "src" de la imagen de arriba.
+    </script>
+</body>
+</html>
