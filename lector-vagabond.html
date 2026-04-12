@@ -2,26 +2,79 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Leyendo: Vagabond</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaZone - Lector Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #121212; color: #e5e5e5; font-family: sans-serif; }
+        /* Barra superior estilo MangaDex */
+        .reader-nav { 
+            background: #1a1a1a; 
+            border-bottom: 1px solid #333;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .btn-nav {
+            background: #2a2a2a;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .btn-nav:hover { background: #3a3a3a; color: #f97316; }
+        select {
+            background: #2a2a2a;
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body class="bg-black text-white">
-    <nav class="p-4 bg-zinc-900 flex justify-between">
-        <a href="index.html" class="text-orange-500 font-bold">← Volver al Inicio</a>
-        <span>Capítulo 1</span>
-    </nav>
-    <div class="max-w-[800px] mx-auto py-2" id="lector"></div>
+<body>
+
+    <div class="reader-nav p-2 shadow-xl">
+        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            
+            <a href="index.html" class="text-orange-500 font-bold hover:text-orange-400">← MangaZone</a>
+
+            <div class="flex items-center gap-2">
+                <button class="btn-nav">« Ant.</button>
+                
+                <select id="selector-cap">
+                    <option>Ch. 1</option>
+                    <option>Ch. 2</option>
+                    <option>Ch. 3</option>
+                </select>
+
+                <button class="btn-nav">Sig. »</button>
+            </div>
+
+            <button class="btn-nav text-zinc-400">Menú ☰</button>
+        </div>
+    </div>
+
+    <div class="max-w-[800px] mx-auto py-4" id="visor">
+        </div>
+
     <script>
+        // Aquí pones las páginas de este capítulo específico
         const paginas = [
+            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
             "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
             "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg"
         ];
-        const contenedor = document.getElementById('lector');
-        paginas.forEach(url => {
+
+        const visor = document.getElementById('visor');
+
+        paginas.forEach((url, i) => {
             const img = document.createElement('img');
             img.src = url;
-            img.className = "w-full mb-1";
-            contenedor.appendChild(img);
+            img.className = "w-full mb-1 shadow-lg";
+            img.alt = "Página " + (i + 1);
+            visor.appendChild(img);
         });
     </script>
 </body>
