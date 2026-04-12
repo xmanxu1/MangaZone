@@ -3,77 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone</title>
+    <title>MangaZone - Premium</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --fondo: #0b0e14;
-            --tarjeta: #1a1d24;
-            --azul: #3b82f6;
-            --texto: #ffffff;
-        }
-
+        /* Fondo degradado animado */
         body {
-            background-color: var(--fondo);
-            color: var(--texto);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(-45deg, #0b0e14, #1a1d24, #0b0e14);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 20px;
+            min-height: 100vh;
         }
 
-        header {
-            text-align: center;
-            padding: 30px 0;
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         header h1 {
-            color: var(--azul);
-            font-size: 2.5rem;
-            text-transform: uppercase;
-            margin: 0;
+            text-align: center;
+            color: #3b82f6;
+            font-size: 3rem;
+            text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+            margin-bottom: 40px;
         }
 
         #contenedor-mangas {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 30px;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .manga-card {
-            background: var(--tarjeta);
-            border-radius: 12px;
+            background: rgba(26, 29, 36, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             overflow: hidden;
-            border: 1px solid #2d333b;
-            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
 
         .manga-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--azul);
+            transform: scale(1.05);
+            border-color: #3b82f6;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
         }
 
         .manga-card img {
             width: 100%;
-            height: 350px; /* Un poco más alto para que quepa bien la portada */
+            height: 380px;
             object-fit: cover;
         }
 
-        .manga-info {
-            padding: 15px;
+        .info {
+            padding: 20px;
+            text-align: center;
         }
 
-        .manga-info h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.2rem;
-            color: var(--azul);
+        /* Título con sombra para que resalte */
+        .info h3 {
+            margin: 0 0 10px 0;
+            color: #3b82f6;
+            font-size: 1.4rem;
+            text-transform: capitalize;
         }
 
-        .manga-info p {
-            font-size: 0.9rem;
-            color: #9aa1a9;
-            margin: 0;
+        /* Estilo de los botones */
+        .btn-leer {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-leer:hover {
+            background: #2563eb;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
         }
     </style>
 </head>
@@ -90,40 +109,33 @@
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function cargarMangas() {
-            const lista = document.getElementById('contenedor-mangas');
-
-            try {
-                const { data: mangas, error } = await _supabase
-                    .from('Mangas')
-                    .select('*');
-
-                if (error) throw error;
-
-                lista.innerHTML = '';
-
-                mangas.forEach(manga => {
-                    const card = document.createElement('div');
-                    card.className = 'manga-card';
-                    
-                    // IMPORTANTE: manga['título'] con acento para que coincida con Supabase
-                    card.innerHTML = `
-                        <img src="${manga.portada_url}" alt="${manga['título']}">
-                        <div class="manga-info">
-                            <h3>${manga['título'] || 'Sin título'}</h3>
-                            <p>${manga.sinopsis || 'Sin descripción.'}</p>
-                        </div>
-                    `;
-                    
-                    lista.appendChild(card);
-                });
-
-            } catch (err) {
-                console.error(err);
+        async function cargar() {
+            // Intentamos leer la tabla 'Mangas'
+            const { data, error } = await _supabase.from('Mangas').select('*');
+            
+            if (error) {
+                console.error("Error:", error);
+                return;
             }
-        }
 
-        cargarMangas();
+            const lista = document.getElementById('contenedor-mangas');
+            lista.innerHTML = '';
+
+            data.forEach(manga => {
+                // AQUÍ ESTÁ EL TRUCO: Buscamos 'título' con acento o sin él por si acaso
+                const tituloReal = manga['título'] || manga['titulo'] || 'Sin título';
+                
+                lista.innerHTML += `
+                    <div class="manga-card">
+                        <img src="${manga.portada_url}" alt="${tituloReal}">
+                        <div class="info">
+                            <h3>${tituloReal}</h3>
+                            <button class="btn-leer">Leer Ahora</button>
+                        </div>
+                    </div>`;
+            });
+        }
+        cargar();
     </script>
 </body>
 </html>
