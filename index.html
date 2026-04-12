@@ -6,7 +6,6 @@
     <title>MangaZone - Premium</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Fondo degradado animado */
         body {
             background: linear-gradient(-45deg, #0b0e14, #1a1d24, #0b0e14);
             background-size: 400% 400%;
@@ -47,13 +46,11 @@
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
         }
 
         .manga-card:hover {
             transform: scale(1.05);
             border-color: #3b82f6;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.6);
         }
 
         .manga-card img {
@@ -67,32 +64,31 @@
             text-align: center;
         }
 
-        /* Título con sombra para que resalte */
         .info h3 {
             margin: 0 0 10px 0;
             color: #3b82f6;
             font-size: 1.4rem;
-            text-transform: capitalize;
         }
 
-        /* Estilo de los botones */
         .btn-leer {
             background: #3b82f6;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
             text-transform: uppercase;
             width: 100%;
-            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-leer:hover {
             background: #2563eb;
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.7);
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -110,27 +106,24 @@
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function cargar() {
-            // Intentamos leer la tabla 'Mangas'
             const { data, error } = await _supabase.from('Mangas').select('*');
             
-            if (error) {
-                console.error("Error:", error);
-                return;
-            }
+            if (error) return;
 
             const lista = document.getElementById('contenedor-mangas');
             lista.innerHTML = '';
 
             data.forEach(manga => {
-                // AQUÍ ESTÁ EL TRUCO: Buscamos 'título' con acento o sin él por si acaso
                 const tituloReal = manga['título'] || manga['titulo'] || 'Sin título';
+                // Usamos la columna "URL del banner" o "banner_url" para el enlace
+                const enlaceManga = manga['URL del banner'] || manga['banner_url'] || '#';
                 
                 lista.innerHTML += `
                     <div class="manga-card">
                         <img src="${manga.portada_url}" alt="${tituloReal}">
                         <div class="info">
                             <h3>${tituloReal}</h3>
-                            <button class="btn-leer">Leer Ahora</button>
+                            <a href="${enlaceManga}" target="_blank" class="btn-leer">Leer Ahora</a>
                         </div>
                     </div>`;
             });
