@@ -3,66 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Oficial</title>
+    <title>MangaZone | Lector</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-body: #0b0e14;
-            --bg-sidebar: #12151c;
-            --accent: #ff6700; /* Naranja estilo MangaDex */
-            --text-white: #ffffff;
-            --text-gray: #9aa1a9;
+            --bg: #0b0e14;
+            --sidebar: #12151c;
+            --accent: #ff6700;
+            --text: #ffffff;
+            --text-dim: #9aa1a9;
         }
 
         body {
-            background-color: var(--bg-body);
-            color: var(--text-white);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* BARRA LATERAL (SIDEBAR) */
+        /* SIDEBAR */
         nav {
-            width: 250px;
-            background-color: var(--bg-sidebar);
+            width: 240px;
+            background-color: var(--sidebar);
             border-right: 1px solid #2d333b;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            padding: 20px;
         }
 
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--text-white);
-            margin-bottom: 40px;
-        }
+        .logo { font-size: 1.8rem; font-weight: bold; margin-bottom: 30px; }
         .logo span { color: var(--accent); }
 
-        .menu-item {
-            color: var(--text-gray);
-            text-decoration: none;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            transition: 0.3s;
-        }
-        .menu-item:hover {
-            background: #1a1d24;
-            color: white;
-        }
+        /* CONTENIDO */
+        main { flex: 1; overflow-y: auto; }
 
-        /* CONTENIDO PRINCIPAL */
-        main {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* HERO BANNER (DONDE ESTABA EL ERROR) */
-        .hero-container {
+        .hero {
             height: 500px;
             background-size: cover;
             background-position: center;
@@ -72,11 +50,10 @@
             padding: 0 60px;
         }
 
-        /* Sombra oscura para que se lea el texto */
         .hero-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to right, var(--bg-body) 20%, rgba(0,0,0,0.4) 100%);
+            background: linear-gradient(to right, var(--bg) 25%, rgba(11,14,20,0.3) 100%);
         }
 
         .hero-content {
@@ -84,151 +61,89 @@
             z-index: 2;
             display: flex;
             gap: 40px;
-            max-width: 1100px;
+            align-items: center;
         }
 
-        /* Portada Vertical */
         .hero-poster {
             width: 220px;
-            height: 320px;
+            height: 310px;
             border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             object-fit: cover;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
         }
 
-        .hero-text h1 {
-            font-size: 3.5rem;
-            margin: 0;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-        }
+        .hero-info h1 { font-size: 3.5rem; margin: 0; }
+        .hero-info p { color: var(--text-dim); max-width: 550px; line-height: 1.6; margin: 20px 0; }
 
-        .hero-text p {
-            color: var(--text-gray);
-            font-size: 1.1rem;
-            margin: 25px 0;
-            line-height: 1.6;
-            max-width: 600px;
-        }
-
-        /* Botón Naranja */
-        .btn-orange {
+        /* BOTÓN DE LEER */
+        .btn-leer {
             background-color: var(--accent);
             color: white;
-            padding: 16px 40px;
+            padding: 16px 45px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: bold;
             font-size: 1.1rem;
             display: inline-block;
             transition: 0.3s;
-        }
-        .btn-orange:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(255, 103, 0, 0.3);
+            border: none;
+            cursor: pointer;
         }
 
-        /* SECCIÓN DE ABAJO (CATÁLOGO) */
-        .catalog-container {
-            padding: 50px 60px;
+        .btn-leer:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 103, 0, 0.4);
+            filter: brightness(1.1);
         }
-        .catalog-title {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            border-left: 5px solid var(--accent);
-            padding-left: 15px;
-        }
-        .manga-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 30px;
-        }
-        .manga-card {
-            background: #1a1d24;
-            border-radius: 10px;
-            overflow: hidden;
-            text-decoration: none;
-            color: white;
-            transition: 0.3s;
-        }
-        .manga-card:hover { transform: scale(1.05); }
-        .manga-card img { width: 100%; height: 260px; object-fit: cover; }
-        .manga-card-info { padding: 15px; text-align: center; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo">Manga<span>Zone</span></div>
-        <a href="#" class="menu-item">🏠 Inicio</a>
-        <a href="#" class="menu-item">🔥 Tendencias</a>
-        <a href="#" class="menu-item">📚 Mi Biblioteca</a>
     </nav>
 
-    <main>
-        <div id="hero-section">
-            </div>
-
-        <div class="catalog-container">
-            <h2 class="catalog-title">Mangas Populares</h2>
-            <div id="manga-grid" class="manga-grid">
-                </div>
-        </div>
-    </main>
+    <main id="main-content">
+        </main>
 
     <script>
-        // Configuración de Supabase
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co';
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function renderizarPagina() {
+        async function cargarPagina() {
             const { data, error } = await _supabase.from('Mangas').select('*');
-            if (error) {
-                console.error("Error al conectar:", error);
-                return;
-            }
+            if (error || !data.length) return;
 
-            if (data && data.length > 0) {
-                const heroDiv = document.getElementById('hero-section');
-                const gridDiv = document.getElementById('manga-grid');
+            const m = data[0]; // Primer manga
+            const main = document.getElementById('main-content');
 
-                // 1. ASIGNACIÓN DEL BANNER (USANDO TUS COLUMNAS SEPARADAS)
-                const principal = data[0];
-                const titulo = principal.titulo || principal['título'];
-                
-                // SEPARACIÓN CRUCIAL:
-                const imagenDeFondo = principal.banner_url;  // Imagen ancha (1600x900)
-                const imagenDePortada = principal.portada_url; // Imagen vertical (póster)
-                const linkCapitulo = principal['URL del banner'] || '#';
+            // --- CONFIGURACIÓN DE COLUMNAS ---
+            const titulo = m.titulo || m['título'];
+            const portada = m.portada_url;
+            const banner = m.banner_url || m.portada_url;
+            const sinopsis = m.sinopsis || '';
+            
+            // IMPORTANTE: Aquí buscamos el link de lectura. 
+            // Si en tu Supabase la columna se llama "URL del banner", cámbialo abajo:
+            const linkLectura = m['URL del banner'] || '#'; 
 
-                heroDiv.innerHTML = `
-                    <div class="hero-container" style="background-image: url('${imagenDeFondo}')">
-                        <div class="hero-overlay"></div>
-                        <div class="hero-content">
-                            <img src="${imagenDePortada}" class="hero-poster">
-                            <div class="hero-text">
-                                <h1>${titulo}</h1>
-                                <p>${principal.sinopsis || 'Sin descripción disponible.'}</p>
-                                <a href="${linkCapitulo}" target="_blank" class="btn-orange">LEER AHORA</a>
-                            </div>
+            main.innerHTML = `
+                <div class="hero" style="background-image: url('${banner}')">
+                    <div class="hero-overlay"></div>
+                    <div class="hero-content">
+                        <img src="${portada}" class="hero-poster">
+                        <div class="hero-info">
+                            <h1>${titulo}</h1>
+                            <p>${sinopsis}</p>
+                            <a href="${linkLectura}" target="_blank" class="btn-leer">LEER AHORA</a>
                         </div>
                     </div>
-                `;
-
-                // 2. RENDERIZAR EL CATÁLOGO DE ABAJO
-                gridDiv.innerHTML = '';
-                data.forEach(manga => {
-                    gridDiv.innerHTML += `
-                        <a href="${manga['URL del banner'] || '#'}" target="_blank" class="manga-card">
-                            <img src="${manga.portada_url}">
-                            <div class="manga-card-info">${manga.titulo || manga['título']}</div>
-                        </a>
-                    `;
-                });
-            }
+                </div>
+            `;
         }
 
-        renderizarPagina();
+        cargarPagina();
     </script>
 </body>
 </html>
