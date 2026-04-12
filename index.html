@@ -3,79 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Inicio</title>
+    <title>MangaZone | Principal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #050505; color: white; font-family: sans-serif; }
-        .neon-title {
+        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
+        
+        /* LA BARRA SUPERIOR QUE TE GUSTABA */
+        .navbar-neon {
+            background: #0a0a0a;
+            border-bottom: 2px solid #ff6700; /* Línea neón inferior */
+            box-shadow: 0 4px 20px rgba(255, 103, 0, 0.2);
+        }
+
+        .neon-text {
             color: #fff;
-            text-shadow: 0 0 7px #ff6700, 0 0 10px #ff6700, 0 0 21px #ff6700;
+            text-shadow: 0 0 10px #ff6700, 0 0 20px #ff6700;
             font-weight: 900;
             text-transform: uppercase;
         }
-        .btn-mangazone {
-            background-color: #ff6700;
+
+        .btn-leer {
+            background: linear-gradient(135deg, #ff6700 0%, #ff4500 100%);
+            font-weight: 800;
             transition: 0.3s;
-            text-decoration: none;
-            display: block;
-            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .btn-mangazone:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 103, 0, 0.6);
+
+        .btn-leer:hover {
+            box-shadow: 0 0 25px rgba(255, 103, 0, 0.5);
+            transform: translateY(-2px);
         }
+
         .manga-card {
             background: #111;
+            border-radius: 15px;
             border: 1px solid #222;
-            border-radius: 12px;
             overflow: hidden;
             transition: 0.3s;
         }
-        .manga-card:hover { border-color: #ff6700; }
+
+        .manga-card:hover {
+            border-color: #ff6700;
+        }
     </style>
 </head>
-<body class="p-8">
+<body>
 
-    <header class="flex justify-between items-center mb-12">
-        <h1 class="neon-title text-3xl">MangaZone</h1>
-    </header>
+    <nav class="navbar-neon p-4 mb-10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="neon-text text-2xl tracking-tighter">MangaZone</h1>
+            <div class="flex gap-6 text-xs font-bold uppercase tracking-widest text-zinc-400">
+                <a href="#" class="text-white">Inicio</a>
+                <a href="#" class="hover:text-orange-500 transition">Populares</a>
+                <a href="#" class="hover:text-orange-500 transition">Mi Lista</a>
+            </div>
+        </div>
+    </nav>
 
-    <main id="manga-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-        <p class="text-zinc-500">Cargando biblioteca...</p>
-    </main>
+    <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] mb-6">Mangas Disponibles</h2>
+        
+        <div id="manga-list" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <p class="text-orange-500 animate-pulse">Conectando con la base de datos...</p>
+        </div>
+    </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
         
-        // Tus credenciales de Supabase
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co'
-        const supabaseKey = 'TU_ANON_KEY_AQUÍ' // PEGA AQUÍ TU CLAVE ANON
+        const supabaseKey = 'TU_ANON_KEY_AQUÍ' // <--- PON TU CLAVE AQUÍ
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        async function cargarMangas() {
+        async function render() {
             const { data, error } = await _supabase.from('Mangas').select('*')
-
             if (error) return console.error(error)
 
-            const listado = document.getElementById('manga-list')
-            listado.innerHTML = '' 
+            const container = document.getElementById('manga-list');
+            container.innerHTML = '';
 
-            data.forEach(manga => {
-                listado.innerHTML += `
+            data.forEach(m => {
+                container.innerHTML += `
                     <div class="manga-card">
-                        <img src="${manga.portada_url}" class="w-full h-80 object-cover">
+                        <img src="${m.portada_url}" class="w-full h-72 object-cover">
                         <div class="p-4">
-                            <h2 class="font-bold text-sm truncate mb-3 uppercase">${manga.titulo}</h2>
-                            <a href="lector-manga.html?url=${encodeURIComponent(manga.leer_url)}" 
-                               class="btn-mangazone py-2 text-xs font-black rounded text-white">
+                            <h3 class="text-xs font-black uppercase mb-4 truncate">${m.titulo}</h3>
+                            <a href="lector-manga.html?url=${encodeURIComponent(m.leer_url)}" 
+                               class="btn-leer block text-center py-3 text-[10px] rounded-lg text-white">
                                 LEER AHORA
                             </a>
                         </div>
                     </div>
-                `
-            })
+                `;
+            });
         }
-        cargarMangas()
+        render();
     </script>
 </body>
 </html>
