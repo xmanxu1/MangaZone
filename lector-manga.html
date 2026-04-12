@@ -28,14 +28,21 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlFinal = urlParams.get('url');
+        // 1. Obtener la URL de la barra de direcciones
+        const params = new URLSearchParams(window.location.search);
+        const imagenUrl = params.get('url');
 
-        if (urlFinal) {
-            // Esto quita el texto "Cargando página" y pone la imagen real
-            document.getElementById('manga-img').src = decodeURIComponent(urlFinal);
+        // 2. Si existe la URL, ponerla en la imagen
+        if (imagenUrl) {
+            const imgElement = document.getElementById('manga-img');
+            imgElement.src = decodeURIComponent(imagenUrl);
+            
+            // Si la imagen falla al cargar, avisar
+            imgElement.onerror = function() {
+                this.alt = "Error: El enlace de la imagen no es válido o ha expirado.";
+            };
         } else {
-            alert("No se recibió ninguna imagen de la base de datos.");
+            document.getElementById('manga-img').alt = "Error: No se recibió ninguna URL.";
         }
     </script>
 </body>
