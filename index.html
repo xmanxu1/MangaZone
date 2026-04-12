@@ -8,9 +8,10 @@
     <style>
         body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; margin: 0; }
         
+        /* BANNER CON ALTURA CORREGIDA */
         .hero-section {
             position: relative;
-            height: 55vh; /* ALTURA REDUCIDA AQUÍ */
+            height: 55vh; 
             width: 100%;
             display: flex;
             align-items: center;
@@ -21,10 +22,11 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover;
-            background-position: center 20%; /* Ajusta para que la cara de Anya se vea bien */
+            background-position: center 20%;
             z-index: 1;
         }
 
+        /* DEGRADADO INMERSIVO */
         .hero-overlay {
             position: absolute;
             inset: 0;
@@ -40,7 +42,6 @@
             width: 100%;
         }
 
-        /* Portada más pequeña para que encaje en el banner reducido */
         .manga-card-hero {
             width: 180px; 
             border-radius: 10px;
@@ -56,6 +57,7 @@
             text-transform: uppercase;
             transition: 0.3s;
             display: inline-block;
+            cursor: pointer;
         }
 
         .btn-leer:hover {
@@ -80,12 +82,9 @@
     <div class="neon-logo text-xl">MangaZone</div>
 
     <div id="hero-container">
+        <div class="flex items-center justify-center h-[55vh]">
+            <p class="text-orange-500 animate-pulse font-bold">CARGANDO BIBLIOTECA...</p>
         </div>
-
-    <div class="p-10">
-        <h2 class="text-zinc-500 font-bold uppercase tracking-widest text-xs mb-6">Novedades</h2>
-        <div class="grid grid-cols-5 gap-6">
-            </div>
     </div>
 
     <script type="module">
@@ -96,11 +95,19 @@
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
         async function load() {
+            // Buscamos el manga en Supabase
             const { data, error } = await _supabase.from('Mangas').select('*').limit(1)
+
+            if (error) {
+                console.error("Error:", error);
+                return;
+            }
 
             if (data && data.length > 0) {
                 const m = data[0];
-                document.getElementById('hero-container').innerHTML = `
+                const container = document.getElementById('hero-container');
+
+                container.innerHTML = `
                     <section class="hero-section">
                         <div id="hero-bg" style="background-image: url('${m.banner_url}')"></div>
                         <div class="hero-overlay"></div>
