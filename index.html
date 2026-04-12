@@ -3,29 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone - Catálogo</title>
+    <title>MangaZone | Biblioteca Online</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #0b0e14;
-            --card-bg: #1a1d24;
-            --text-color: #ffffff;
-            --accent-color: #3b82f6;
+            --fondo: #0b0e14;
+            --tarjeta: #1a1d24;
+            --azul: #3b82f6;
+            --texto: #ffffff;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--fondo);
+            color: var(--texto);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             padding: 20px;
         }
 
-        h1 {
+        header {
             text-align: center;
-            color: var(--accent-color);
+            padding: 40px 0;
+        }
+
+        header h1 {
+            color: var(--azul);
             font-size: 2.5rem;
-            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
         }
 
         #contenedor-mangas {
@@ -37,18 +43,18 @@
         }
 
         .manga-card {
-            background: var(--card-bg);
+            background: var(--tarjeta);
             border-radius: 12px;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
             border: 1px solid #2d333b;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .manga-card:hover {
             transform: translateY(-10px);
+            border-color: var(--azul);
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            border-color: var(--accent-color);
         }
 
         .manga-card img {
@@ -62,49 +68,52 @@
         }
 
         .manga-info h3 {
-            margin: 0 0 10px 0;
+            margin: 0 0 8px 0;
             font-size: 1.1rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            color: var(--azul);
         }
 
         .manga-info p {
             font-size: 0.85rem;
             color: #9aa1a9;
+            line-height: 1.4;
+            margin: 0;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            line-height: 1.4;
         }
 
         .loading {
             text-align: center;
+            grid-column: 1 / -1;
+            padding: 50px;
             font-size: 1.2rem;
-            margin-top: 50px;
+            color: #666;
         }
     </style>
 </head>
 <body>
 
-    <h1>MangaZone</h1>
-    
+    <header>
+        <h1>MangaZone</h1>
+    </header>
+
     <div id="contenedor-mangas">
-        <div class="loading">Cargando biblioteca desde Supabase...</div>
+        <div class="loading">Conectando con la base de datos...</div>
     </div>
 
     <script>
-        // Configuración de tu conexión
+        // Tus credenciales de conexión
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co';
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function cargarCatalogo() {
-            const contenedor = document.getElementById('contenedor-mangas');
-            
+        async function cargarMangas() {
+            const lista = document.getElementById('contenedor-mangas');
+
             try {
-                // Consultamos la tabla 'Mangas' que creaste
+                // Consultamos tu tabla 'Mangas'
                 const { data: mangas, error } = await _supabase
                     .from('Mangas')
                     .select('*');
@@ -112,34 +121,38 @@
                 if (error) throw error;
 
                 // Limpiamos el mensaje de carga
-                contenedor.innerHTML = '';
+                lista.innerHTML = '';
 
-                // Generamos las tarjetas para cada manga
+                if (mangas.length === 0) {
+                    lista.innerHTML = '<div class="loading">No hay mangas en la base de datos.</div>';
+                    return;
+                }
+
+                // Dibujamos cada manga
                 mangas.forEach(manga => {
                     const card = document.createElement('div');
                     card.className = 'manga-card';
+                    
+                    // Ajustamos nombres de columnas según tus capturas
                     card.innerHTML = `
-                        <img src="${manga.portada_url}" alt="${manga.titulo}">
+                        <img src="${manga.portada_url}" alt="${manga.título}">
                         <div class="manga-info">
-                            <h3>${manga.titulo}</h3>
+                            <h3>${manga.título || 'Sin título'}</h3>
                             <p>${manga.sinopsis || 'Sin descripción disponible.'}</p>
                         </div>
                     `;
                     
-                    // Al hacer clic, podrías enviar al usuario a ver el manga
-                    card.onclick = () => alert('Abriendo: ' + manga.titulo);
-                    
-                    contenedor.appendChild(card);
+                    lista.appendChild(card);
                 });
 
             } catch (err) {
-                console.error('Error:', err);
-                contenedor.innerHTML = '<p style="color:red; text-align:center;">Error al conectar con la base de datos.</p>';
+                console.error('Error de Supabase:', err);
+                lista.innerHTML = '<div class="loading" style="color:red;">Error al cargar los datos. Revisa la consola (F12).</div>';
             }
         }
 
-        // Ejecutar al cargar la página
-        cargarCatalogo();
+        // Iniciar la carga
+        cargarMangas();
     </script>
 </body>
 </html>
