@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaZone - Lector Spy x Family</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0a0a0a; color: #e5e5e5; font-family: 'Segoe UI', sans-serif; overflow: hidden; margin: 0; }
+        
+        /* Efecto Neón para el Logo */
+        .neon-logo {
+            color: #fff;
+            text-shadow: 
+                0 0 5px #ff6700,
+                0 0 10px #ff6700,
+                0 0 20px #ff6700;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .reader-nav { 
+            background: #121212; 
+            border-bottom: 1px solid #222; 
+            height: 70px; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        .btn-nav { 
+            background: #252525; 
+            padding: 8px 16px; 
+            border-radius: 6px; 
+            font-size: 14px; 
+            transition: 0.3s; 
+            border: 1px solid #333;
+        }
+
+        .btn-nav:hover:not(:disabled) { 
+            background: #ff6700; 
+            color: white; 
+            border-color: #ff6700;
+            box-shadow: 0 0 10px rgba(255, 103, 0, 0.4);
+        }
+
+        .btn-nav:disabled { opacity: 0.2; cursor: not-allowed; }
+        
+        select {
+            background: #252525;
+            border: 1px solid #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Contenedor de la Imagen */
+        .manga-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 70px);
+            background: #000;
+            padding: 10px;
+        }
+
+        #manga-img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="flex flex-col">
+
+    <nav class="reader-nav px-6">
+        <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
+            <a href="index.html" class="neon-logo text-xl">
+                MANGAZONE
+            </a>
+            
+            <div class="flex items-center gap-4">
+                <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">ANTERIOR</button>
+                
+                <select id="selector-cap">
+                    <option value="1" selected>Capítulo 1</option>
+                    <option value="2">Capítulo 2</option>
+                </select>
+
+                <span id="info-pag" class="text-sm font-bold text-orange-500 w-[60px] text-center">1 / 1</span>
+                
+                <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">SIGUIENTE</button>
+            </div>
+
+            <div class="hidden md:block text-zinc-500 text-xs uppercase tracking-[0.3em] font-black">
+                Spy x Family
+            </div>
+        </div>
+    </nav>
+
+    <div class="manga-container" onclick="cambiarPagina(1)">
+        <img id="manga-img" src="" alt="Cargando página...">
+    </div>
+
+    <script>
+        // --- AQUÍ PEGAS LOS LINKS DE TUS PNG ---
+        const paginas = [
+            "https://i.postimg.cc/mD363Yf7/image-8283cb.jpg", // La imagen que me pasaste
+            "https://images8.alphacoders.com/133/1332213.png" // Otra de ejemplo
+        ];
+
+        let indiceActual = 0;
+        const imgElement = document.getElementById('manga-img');
+        const infoPag = document.getElementById('info-pag');
+        const btnAnt = document.getElementById('btn-ant');
+
+        function actualizarLector() {
+            // Animación suave de cambio
+            imgElement.style.opacity = 0;
+            
+            setTimeout(() => {
+                imgElement.src = paginas[indiceActual];
+                infoPag.innerText = `${indiceActual + 1} / ${paginas.length}`;
+                btnAnt.disabled = (indiceActual === 0);
+                imgElement.style.opacity = 1;
+            }, 150);
+        }
+
+        function cambiarPagina(direccion) {
+            const nuevoIndice = indiceActual + direccion;
+            if (nuevoIndice >= 0 && nuevoIndice < paginas.length) {
+                indiceActual = nuevoIndice;
+                actualizarLector();
+            } else if (nuevoIndice >= paginas.length) {
+                alert("¡Has terminado el capítulo!");
+            }
+        }
+
+        // Control por teclado (Flechas)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight") cambiarPagina(1);
+            if (e.key === "ArrowLeft") cambiarPagina(-1);
+        });
+
+        // Iniciar
+        actualizarLector();
+        imgElement.style.transition = "opacity 0.2s ease";
+    </script>
+</body>
+</html>
