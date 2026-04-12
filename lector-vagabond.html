@@ -3,111 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone - Lector Paginado</title>
+    <title>MangaZone - Lector con Selector</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0f0f0f; color: #e5e5e5; font-family: sans-serif; overflow-x: hidden; }
-        .reader-nav { background: #1a1a1a; border-bottom: 1px solid #333; }
-        .btn-nav {
-            background: #2a2a2a;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: 0.2s;
-        }
+        body { background: #0f0f0f; color: #e5e5e5; font-family: sans-serif; overflow-x: hidden; margin: 0; }
+        .reader-nav { background: #1a1a1a; border-bottom: 1px solid #333; height: 60px; display: flex; align-items: center; }
+        .btn-nav { background: #2a2a2a; padding: 6px 12px; border-radius: 4px; font-size: 13px; transition: 0.2s; }
         .btn-nav:hover:not(:disabled) { background: #f97316; color: white; }
         .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
-        /* Contenedor de la imagen para que siempre encaje en pantalla */
+        
+        select {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
         .manga-container {
             display: flex;
             justify-content: center;
-            align-items: flex-start;
-            min-height: calc(100-vh - 80px);
-            padding: 10px;
+            align-items: center;
+            height: calc(100vh - 60px); /* Resta la altura de la barra nav */
+            background: #000;
         }
         #manga-img {
+            max-height: 95%;
             max-width: 100%;
-            height: auto;
-            max-height: 90vh; /* Para que no tengas que scrollear ni siquiera la imagen */
-            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            object-fit: contain;
             cursor: pointer;
         }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="h-screen flex flex-col">
 
-    <div class="reader-nav p-3 shadow-xl">
-        <div class="max-w-5xl mx-auto flex justify-between items-center">
-            <a href="index.html" class="text-orange-500 font-bold">← MangaZone</a>
+    <nav class="reader-nav px-4 shadow-2xl">
+        <div class="max-w-6xl mx-auto w-full flex justify-between items-center">
+            <a href="index.html" class="text-orange-500 font-bold text-sm md:text-base">← MangaZone</a>
             
-            <div class="flex items-center gap-4">
-                <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">« Ant.</button>
-                <span id="info-pag" class="text-sm font-mono text-zinc-400 text-center min-w-[80px]">Pg. 1 / 1</span>
-                <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">Sig. »</button>
+            <div class="flex items-center gap-2 md:gap-4">
+                <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">«</button>
+                
+                <select id="selector-cap" onchange="saltarACapitulo(this.value)">
+                    <option value="lector-vagabond.html" selected>Cap. 1</option>
+                    <option value="lector-vagabond-c2.html">Cap. 2</option>
+                    <option value="lector-vagabond-c3.html">Cap. 3</option>
+                </select>
+
+                <span id="info-pag" class="text-xs font-mono text-zinc-500 min-w-[60px] text-center">1 / 1</span>
+                
+                <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">»</button>
             </div>
 
-            <div class="hidden md:block text-zinc-500 text-xs">Modo: Paginado</div>
+            <div class="hidden sm:block text-zinc-600 text-[10px] uppercase tracking-widest">Vagabond</div>
         </div>
-    </div>
+    </nav>
 
-    <div class="manga-container flex-grow overflow-hidden" onclick="cambiarPagina(1)">
+    <div class="manga-container" onclick="cambiarPagina(1)">
         <img id="manga-img" src="" alt="Cargando...">
     </div>
 
     <script>
-        // Tus imágenes aquí
+        // Imágenes del Capítulo Actual
         const paginas = [
             "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Manga_sample.png/800px-Manga_sample.png",
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Japan_manga_icon.svg/800px-Japan_manga_icon.svg.png"
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Manga_sample.png/800px-Manga_sample.png"
         ];
 
         let indiceActual = 0;
         const imgElement = document.getElementById('manga-img');
         const infoPag = document.getElementById('info-pag');
         const btnAnt = document.getElementById('btn-ant');
-        const btnSig = document.getElementById('btn-sig');
 
         function actualizarLector() {
-            // Cambiar imagen
             imgElement.src = paginas[indiceActual];
-            
-            // Actualizar texto de página
-            infoPag.innerText = `Pg. ${indiceActual + 1} / ${paginas.length}`;
-            
-            // Bloquear botones si llegamos al final o principio
+            infoPag.innerText = `${indiceActual + 1} / ${paginas.length}`;
             btnAnt.disabled = (indiceActual === 0);
-            
-            // Si es la última página, el botón "Sig" podría llevarte a otro capítulo después
-            if (indiceActual === paginas.length - 1) {
-                btnSig.innerText = "Fin Cap.";
-            } else {
-                btnSig.innerText = "Sig. »";
-            }
-
-            // Hacer scroll hacia arriba automáticamente al cambiar de página
-            window.scrollTo(0, 0);
         }
 
         function cambiarPagina(direccion) {
             const nuevoIndice = indiceActual + direccion;
-            
             if (nuevoIndice >= 0 && nuevoIndice < paginas.length) {
                 indiceActual = nuevoIndice;
                 actualizarLector();
             } else if (nuevoIndice >= paginas.length) {
-                alert("¡Has terminado el capítulo!");
+                alert("Fin del capítulo. Usa el selector para el siguiente.");
             }
         }
 
-        // Iniciar el lector por primera vez
-        actualizarLector();
-
-        // Control por teclado (flechas izquierda y derecha)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "ArrowRight") cambiarPagina(1);
-            if (e.key === "ArrowLeft") cambiarPagina(-1);
-        });
-    </script>
-</body>
-</html>
+        // FUNCIÓN PARA SALTAR DE CAPÍTULO
+        function saltarACapitulo(urlArchivo) {
