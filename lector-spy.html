@@ -3,65 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone - Lector Spy x Family</title>
+    <title>MangaZone - Lector Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0a0a0a; color: #e5e5e5; font-family: sans-serif; overflow: hidden; margin: 0; }
+        body { background: #050505; color: #e5e5e5; font-family: sans-serif; overflow: hidden; margin: 0; }
         
-        /* Estilo Neón MangaZone */
-        .neon-logo {
+        /* Efecto Neón MangaZone */
+        .neon-text {
             color: #fff;
-            text-shadow: 0 0 5px #ff6700, 0 0 10px #ff6700, 0 0 20px #ff6700;
+            text-shadow: 
+                0 0 7px #ff6700,
+                0 0 10px #ff6700,
+                0 0 21px #ff6700;
             font-weight: 900;
-            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .reader-nav { background: #121212; border-bottom: 1px solid #222; height: 70px; display: flex; align-items: center; }
-        
+        .reader-nav { 
+            background: #0f0f0f; 
+            border-bottom: 1px solid #222; 
+            height: 70px; 
+            display: flex; 
+            align-items: center; 
+        }
+
         .btn-nav { 
-            background: #252525; padding: 8px 16px; border-radius: 6px; 
-            font-size: 14px; transition: 0.3s; border: 1px solid #333; 
+            background: #1a1a1a; 
+            padding: 8px 20px; 
+            border-radius: 5px; 
+            font-size: 13px; 
+            font-weight: bold;
+            transition: 0.3s; 
+            border: 1px solid #333;
         }
-        .btn-nav:hover:not(:disabled) { background: #ff6700; color: white; box-shadow: 0 0 10px rgba(255, 103, 0, 0.4); }
-        .btn-nav:disabled { opacity: 0.2; }
 
-        .manga-container {
-            display: flex; justify-content: center; align-items: center;
-            height: calc(100vh - 70px); background: #000;
+        .btn-nav:hover:not(:disabled) { 
+            background: #ff6700; 
+            color: white; 
+            border-color: #ff6700;
+            box-shadow: 0 0 15px rgba(255, 103, 0, 0.4);
         }
-        #manga-img { max-height: 100%; max-width: 100%; object-fit: contain; }
+
+        .btn-nav:disabled { opacity: 0.1; cursor: not-allowed; }
+
+        /* Contenedor Centrado */
+        .manga-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 70px);
+            background: #000;
+            overflow: hidden;
+        }
+
+        #manga-img {
+            max-height: 98vh;
+            max-width: 100%;
+            object-fit: contain;
+            user-select: none;
+        }
     </style>
 </head>
 <body class="flex flex-col">
 
-    <nav class="reader-nav px-6">
+    <nav class="reader-nav px-8">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
-            <a href="index.html" class="neon-logo text-xl">MANGAZONE</a>
             
-            <div class="flex items-center gap-4">
+            <a href="index.html" class="neon-text text-xl no-underline">
+                MangaZone
+            </a>
+            
+            <div class="flex items-center gap-6">
                 <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">ANTERIOR</button>
                 
-                <select id="selector-cap" class="bg-[#252525] border border-[#333] p-2 rounded text-white">
-                    <option value="lector-spy.html" selected>Capítulo 1</option>
-                </select>
-
-                <span id="info-pag" class="text-orange-500 font-bold w-[60px] text-center">1 / 1</span>
+                <div class="flex flex-col items-center">
+                    <span id="info-pag" class="text-orange-500 font-mono text-sm font-bold">1 / 1</span>
+                    <span class="text-[10px] text-zinc-600 uppercase tracking-tighter">Página</span>
+                </div>
                 
                 <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">SIGUIENTE</button>
             </div>
 
-            <div class="hidden md:block text-zinc-500 text-xs tracking-widest uppercase">Spy x Family</div>
+            <div class="hidden md:block text-zinc-700 text-[10px] font-bold uppercase tracking-[0.5em]">
+                Spy x Family - Cap 1
+            </div>
         </div>
     </nav>
 
     <div class="manga-container" onclick="cambiarPagina(1)">
-        <img id="manga-img" src="" alt="Cargando...">
+        <img id="manga-img" src="" alt="Cargando capítulo...">
     </div>
 
     <script>
-        // PEGA AQUÍ LOS LINKS DE TUS PNG
+        // Lista de páginas (Añade aquí tus links directos)
         const paginas = [
-            "https://i.postimg.cc/mD363Yf7/image-8283cb.jpg" 
+            "https://i.postimg.cc/mD363Yf7/image-8283cb.jpg" // Página 1
         ];
 
         let indiceActual = 0;
@@ -70,9 +107,11 @@
         const btnAnt = document.getElementById('btn-ant');
 
         function actualizarLector() {
-            imgElement.src = paginas[indiceActual];
-            infoPag.innerText = `${indiceActual + 1} / ${paginas.length}`;
-            btnAnt.disabled = (indiceActual === 0);
+            if (paginas.length > 0) {
+                imgElement.src = paginas[indiceActual];
+                infoPag.innerText = `${indiceActual + 1} / ${paginas.length}`;
+                btnAnt.disabled = (indiceActual === 0);
+            }
         }
 
         function cambiarPagina(direccion) {
@@ -82,6 +121,12 @@
                 actualizarLector();
             }
         }
+
+        // Control por teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight") cambiarPagina(1);
+            if (e.key === "ArrowLeft") cambiarPagina(-1);
+        });
 
         actualizarLector();
     </script>
