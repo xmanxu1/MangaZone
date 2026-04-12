@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaZone Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0a0a0a; color: white; }
+        .manga-page { max-width: 800px; margin: 0 auto; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+    <nav class="p-4 bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-orange-500">MANGA<span class="text-white">ZONE</span></h1>
+        <div id="controls" class="space-x-2">
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-zinc-800 px-4 py-2 rounded text-sm hover:bg-zinc-700 transition">Arriba ↑</button>
+        </div>
+    </nav>
+
+    <div id="lector" class="manga-page py-4">
+        </div>
+
+    <footer class="p-10 text-center text-zinc-500 border-t border-zinc-900 mt-10">
+        <p>© 2026 - MangaZone Proyecto</p>
+    </footer>
+
+    <script>
+        // PANEL DE CONTROL: Aquí pones tus links
+        const capituloActual = [
+            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Manga_sample.png/800px-Manga_sample.png"
+        ];
+
+        const lector = document.getElementById('lector');
+
+        function cargarManga() {
+            capituloActual.forEach((url, i) => {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = "w-full mb-1";
+                img.loading = "lazy"; 
+                lector.appendChild(img);
+            });
+        }
+
+        cargarManga();
+    </script>
+</body>
+</html>
