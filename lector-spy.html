@@ -11,13 +11,11 @@
         /* Efecto Neón MangaZone */
         .neon-text {
             color: #fff;
-            text-shadow: 
-                0 0 7px #ff6700,
-                0 0 10px #ff6700,
-                0 0 21px #ff6700;
+            text-shadow: 0 0 7px #ff6700, 0 0 10px #ff6700, 0 0 21px #ff6700;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 2px;
+            text-decoration: none;
         }
 
         .reader-nav { 
@@ -36,32 +34,29 @@
             font-weight: bold;
             transition: 0.3s; 
             border: 1px solid #333;
+            color: #ccc;
         }
 
         .btn-nav:hover:not(:disabled) { 
             background: #ff6700; 
             color: white; 
-            border-color: #ff6700;
             box-shadow: 0 0 15px rgba(255, 103, 0, 0.4);
         }
 
         .btn-nav:disabled { opacity: 0.1; cursor: not-allowed; }
 
-        /* Contenedor Centrado */
         .manga-container {
             display: flex;
             justify-content: center;
             align-items: center;
             height: calc(100vh - 70px);
             background: #000;
-            overflow: hidden;
         }
 
         #manga-img {
             max-height: 98vh;
             max-width: 100%;
             object-fit: contain;
-            user-select: none;
         }
     </style>
 </head>
@@ -69,36 +64,27 @@
 
     <nav class="reader-nav px-8">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
-            
-            <a href="index.html" class="neon-text text-xl no-underline">
-                MangaZone
-            </a>
+            <a href="index.html" class="neon-text text-xl">MangaZone</a>
             
             <div class="flex items-center gap-6">
                 <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">ANTERIOR</button>
-                
                 <div class="flex flex-col items-center">
                     <span id="info-pag" class="text-orange-500 font-mono text-sm font-bold">1 / 1</span>
-                    <span class="text-[10px] text-zinc-600 uppercase tracking-tighter">Página</span>
                 </div>
-                
                 <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">SIGUIENTE</button>
             </div>
 
-            <div class="hidden md:block text-zinc-700 text-[10px] font-bold uppercase tracking-[0.5em]">
-                Spy x Family - Cap 1
-            </div>
+            <div class="hidden md:block text-zinc-700 text-[10px] font-bold uppercase tracking-[0.5em]">Spy x Family</div>
         </div>
     </nav>
 
     <div class="manga-container" onclick="cambiarPagina(1)">
-        <img id="manga-img" src="" alt="Cargando capítulo...">
+        <img id="manga-img" src="" alt="Cargando...">
     </div>
 
     <script>
-        // Lista de páginas (Añade aquí tus links directos)
         const paginas = [
-            "https://i.postimg.cc/mD363Yf7/image-8283cb.jpg" // Página 1
+            "https://i.postimg.cc/mD363Yf7/image-8283cb.jpg" // Link directo de la imagen
         ];
 
         let indiceActual = 0;
@@ -121,12 +107,6 @@
                 actualizarLector();
             }
         }
-
-        // Control por teclado
-        document.addEventListener('keydown', (e) => {
-            if (e.key === "ArrowRight") cambiarPagina(1);
-            if (e.key === "ArrowLeft") cambiarPagina(-1);
-        });
 
         actualizarLector();
     </script>
