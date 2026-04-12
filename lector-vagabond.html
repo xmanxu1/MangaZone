@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone - Lector Pro</title>
+    <title>MangaZone - Lector Paginado</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #121212; color: #e5e5e5; font-family: sans-serif; }
-        /* Barra superior estilo MangaDex */
-        .reader-nav { 
-            background: #1a1a1a; 
-            border-bottom: 1px solid #333;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        body { background: #0f0f0f; color: #e5e5e5; font-family: sans-serif; overflow-x: hidden; }
+        .reader-nav { background: #1a1a1a; border-bottom: 1px solid #333; }
         .btn-nav {
             background: #2a2a2a;
             padding: 8px 16px;
@@ -22,59 +15,98 @@
             font-size: 14px;
             transition: 0.2s;
         }
-        .btn-nav:hover { background: #3a3a3a; color: #f97316; }
-        select {
-            background: #2a2a2a;
-            border: none;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
+        .btn-nav:hover:not(:disabled) { background: #f97316; color: white; }
+        .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+        /* Contenedor de la imagen para que siempre encaje en pantalla */
+        .manga-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: calc(100-vh - 80px);
+            padding: 10px;
+        }
+        #manga-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 90vh; /* Para que no tengas que scrollear ni siquiera la imagen */
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
             cursor: pointer;
         }
     </style>
 </head>
-<body>
+<body class="flex flex-col h-screen">
 
-    <div class="reader-nav p-2 shadow-xl">
-        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-2">
+    <div class="reader-nav p-3 shadow-xl">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <a href="index.html" class="text-orange-500 font-bold">← MangaZone</a>
             
-            <a href="index.html" class="text-orange-500 font-bold hover:text-orange-400">← MangaZone</a>
-
-            <div class="flex items-center gap-2">
-                <button class="btn-nav">« Ant.</button>
-                
-                <select id="selector-cap">
-                    <option>Ch. 1</option>
-                    <option>Ch. 2</option>
-                    <option>Ch. 3</option>
-                </select>
-
-                <button class="btn-nav">Sig. »</button>
+            <div class="flex items-center gap-4">
+                <button id="btn-ant" class="btn-nav" onclick="cambiarPagina(-1)">« Ant.</button>
+                <span id="info-pag" class="text-sm font-mono text-zinc-400 text-center min-w-[80px]">Pg. 1 / 1</span>
+                <button id="btn-sig" class="btn-nav" onclick="cambiarPagina(1)">Sig. »</button>
             </div>
 
-            <button class="btn-nav text-zinc-400">Menú ☰</button>
+            <div class="hidden md:block text-zinc-500 text-xs">Modo: Paginado</div>
         </div>
     </div>
 
-    <div class="max-w-[800px] mx-auto py-4" id="visor">
-        </div>
+    <div class="manga-container flex-grow overflow-hidden" onclick="cambiarPagina(1)">
+        <img id="manga-img" src="" alt="Cargando...">
+    </div>
 
     <script>
-        // Aquí pones las páginas de este capítulo específico
+        // Tus imágenes aquí
         const paginas = [
             "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
-            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg",
-            "https://dessindigo.com/storage/images/posts/typesmanga/dessin-vagabond-seinen-manga.jpg"
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Manga_sample.png/800px-Manga_sample.png",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Japan_manga_icon.svg/800px-Japan_manga_icon.svg.png"
         ];
 
-        const visor = document.getElementById('visor');
+        let indiceActual = 0;
+        const imgElement = document.getElementById('manga-img');
+        const infoPag = document.getElementById('info-pag');
+        const btnAnt = document.getElementById('btn-ant');
+        const btnSig = document.getElementById('btn-sig');
 
-        paginas.forEach((url, i) => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = "w-full mb-1 shadow-lg";
-            img.alt = "Página " + (i + 1);
-            visor.appendChild(img);
+        function actualizarLector() {
+            // Cambiar imagen
+            imgElement.src = paginas[indiceActual];
+            
+            // Actualizar texto de página
+            infoPag.innerText = `Pg. ${indiceActual + 1} / ${paginas.length}`;
+            
+            // Bloquear botones si llegamos al final o principio
+            btnAnt.disabled = (indiceActual === 0);
+            
+            // Si es la última página, el botón "Sig" podría llevarte a otro capítulo después
+            if (indiceActual === paginas.length - 1) {
+                btnSig.innerText = "Fin Cap.";
+            } else {
+                btnSig.innerText = "Sig. »";
+            }
+
+            // Hacer scroll hacia arriba automáticamente al cambiar de página
+            window.scrollTo(0, 0);
+        }
+
+        function cambiarPagina(direccion) {
+            const nuevoIndice = indiceActual + direccion;
+            
+            if (nuevoIndice >= 0 && nuevoIndice < paginas.length) {
+                indiceActual = nuevoIndice;
+                actualizarLector();
+            } else if (nuevoIndice >= paginas.length) {
+                alert("¡Has terminado el capítulo!");
+            }
+        }
+
+        // Iniciar el lector por primera vez
+        actualizarLector();
+
+        // Control por teclado (flechas izquierda y derecha)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "ArrowRight") cambiarPagina(1);
+            if (e.key === "ArrowLeft") cambiarPagina(-1);
         });
     </script>
 </body>
