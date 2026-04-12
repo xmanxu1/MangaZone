@@ -3,77 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Sistema Pro</title>
+    <title>MangaZone | Oficial</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg: #0b0e14;
-            --sidebar: #12151c;
+            --bg-dark: #0b0e14;
+            --bg-sidebar: #12151c;
             --accent: #ff6700;
-            --text: #ffffff;
+            --text-main: #ffffff;
             --text-dim: #9aa1a9;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             margin: 0;
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* SIDEBAR */
+        /* BARRA LATERAL */
         nav {
             width: 240px;
-            background-color: var(--sidebar);
+            background-color: var(--bg-sidebar);
             border-right: 1px solid #2d333b;
-            padding: 20px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
         }
 
-        .logo { font-size: 1.8rem; font-weight: bold; margin-bottom: 30px; }
+        .logo { font-size: 1.8rem; font-weight: bold; margin-bottom: 40px; }
         .logo span { color: var(--accent); }
 
         /* CONTENIDO PRINCIPAL */
-        main { flex: 1; overflow-y: auto; }
+        main { flex: 1; overflow-y: auto; position: relative; }
 
+        /* HERO BANNER DINÁMICO */
         .hero {
-            height: 500px;
+            height: 520px;
             background-size: cover;
             background-position: center;
             position: relative;
             display: flex;
             align-items: center;
             padding: 0 60px;
+            transition: 0.5s;
         }
 
         .hero-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to right, var(--bg) 25%, rgba(11,14,20,0.3) 100%);
+            background: linear-gradient(to right, var(--bg-dark) 20%, rgba(11,14,20,0.4) 100%);
         }
 
         .hero-content {
             position: relative;
             z-index: 2;
             display: flex;
-            gap: 40px;
+            gap: 45px;
             align-items: center;
         }
 
         .hero-poster {
             width: 220px;
-            height: 310px;
+            height: 320px;
             border-radius: 12px;
             object-fit: cover;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .hero-info h1 { font-size: 3.5rem; margin: 0; }
-        .hero-info p { color: var(--text-dim); max-width: 550px; line-height: 1.6; margin: 20px 0; }
+        .hero-info p { color: var(--text-dim); max-width: 580px; line-height: 1.6; margin: 25px 0; font-size: 1.1rem; }
 
-        /* BOTÓN NARANJA */
+        /* BOTÓN DE LECTURA */
         .btn-leer {
             background-color: var(--accent);
             color: white;
@@ -83,12 +88,14 @@
             font-weight: bold;
             font-size: 1.1rem;
             display: inline-block;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
         }
 
         .btn-leer:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(255, 103, 0, 0.4);
+            box-shadow: 0 10px 25px rgba(255, 103, 0, 0.4);
             filter: brightness(1.1);
         }
     </style>
@@ -97,45 +104,59 @@
 
     <nav>
         <div class="logo">Manga<span>Zone</span></div>
+        <div style="color: var(--text-dim);">Dashboard</div>
     </nav>
 
-    <main id="main-content">
+    <main id="app">
         </main>
 
     <script>
+        // 1. Configuración de conexión
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co';
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function cargarTodo() {
+        async function cargarMangaZone() {
+            // 2. Traer los datos de la tabla "Mangas"
             const { data, error } = await _supabase.from('Mangas').select('*');
-            if (error || !data.length) return;
+            
+            if (error) {
+                console.error("Error de Supabase:", error);
+                return;
+            }
 
-            const m = data[0];
-            const main = document.getElementById('main-content');
+            if (data && data.length > 0) {
+                const m = data[0]; // Tomamos el primer manga (Spy x Family)
+                const container = document.getElementById('app');
 
-            // --- VARIABLES CLARAS ---
-            const titulo = m.titulo || m['título'];
-            const imgPortada = m.portada_url;
-            const imgBanner = m.banner_url; // Tu nueva columna de fondo
-            const linkManga = m.leer_url;   // TU NUEVA COLUMNA DE LECTURA
+                // 3. Extraer variables (Asegúrate que los nombres coincidan con Supabase)
+                const titulo = m.titulo || m['título'];
+                const banner = m.banner_url || m.portada_url; // Fondo ancho
+                const portada = m.portada_url; // Imagen vertical
+                const linkManga = m.leer_url || "#"; // Enlace de lectura
+                const sinopsis = m.sinopsis || "No hay descripción disponible.";
 
-            main.innerHTML = `
-                <div class="hero" style="background-image: url('${imgBanner}')">
-                    <div class="hero-overlay"></div>
-                    <div class="hero-content">
-                        <img src="${imgPortada}" class="hero-poster">
-                        <div class="hero-info">
-                            <h1>${titulo}</h1>
-                            <p>${m.sinopsis || ''}</p>
-                            <a href="${linkManga}" target="_blank" class="btn-leer">LEER AHORA</a>
+                // 4. Inyectar el HTML
+                container.innerHTML = `
+                    <section class="hero" style="background-image: url('${banner}')">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-content">
+                            <img src="${portada}" class="hero-poster" alt="Portada">
+                            <div class="hero-info">
+                                <h1>${titulo}</h1>
+                                <p>${sinopsis}</p>
+                                <a href="${linkManga}" target="_blank" class="btn-leer">LEER AHORA</a>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `;
+                    </section>
+                `;
+            } else {
+                console.log("No se encontraron datos en la tabla.");
+            }
         }
 
-        cargarTodo();
+        // Ejecutar al cargar la página
+        cargarMangaZone();
     </script>
 </body>
 </html>
