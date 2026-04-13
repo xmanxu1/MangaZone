@@ -9,10 +9,10 @@
     <style>
         body { background-color: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; }
         
-        /* Contenedor del Banner con Degradado Integrado */
+        /* Efecto de Banner con Degradado */
         .hero-section {
             position: relative;
-            min-height: 60vh;
+            min-height: 65vh;
             width: 100%;
             background-size: cover;
             background-position: center 20%;
@@ -24,31 +24,57 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, #050505 5%, rgba(5, 5, 5, 0.5) 50%, transparent 100%);
+            background: linear-gradient(to top, #050505 5%, rgba(5, 5, 5, 0.4) 50%, transparent 100%);
         }
 
         .content-overlay {
             position: relative;
             z-index: 10;
             width: 100%;
-            padding: 0 8% 40px;
+            padding: 0 8% 60px;
         }
 
         .poster-shadow {
-            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            box-shadow: 0 25px 60px rgba(0,0,0,1);
             border: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* Estilo de Capítulos */
-        .cap-item {
+        /* Botón de lectura principal */
+        .btn-principal {
+            background: #ff6700;
+            color: white;
+            padding: 16px 50px;
+            border-radius: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(255, 103, 0, 0.2);
+        }
+        .btn-principal:hover {
+            transform: scale(1.05);
+            background: #ff4500;
+            box-shadow: 0 0 30px rgba(255, 103, 0, 0.4);
+        }
+
+        /* Estilo de la lista de capítulos */
+        .cap-card {
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
+            padding: 18px 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             transition: 0.3s;
+            text-decoration: none;
+            color: inherit;
         }
-        .cap-item:hover {
+        .cap-card:hover {
             border-color: #ff6700;
             background: #111;
-            transform: translateX(8px);
+            transform: translateX(10px);
         }
     </style>
 </head>
@@ -56,18 +82,18 @@
 
     <div id="navbar-placeholder"></div>
 
-    <div id="manga-content">
+    <div id="manga-main-container">
         </div>
 
-    <div class="max-w-[1400px] mx-auto px-[8%] py-12">
-        <h3 class="text-xl font-black uppercase tracking-widest mb-8 text-zinc-500 flex items-center gap-3">
-            <i class="fas fa-layer-group text-[#ff6700]"></i> Capítulos Disponibles
+    <div class="max-w-[1400px] mx-auto px-[8%] py-16">
+        <h3 class="text-xl font-black uppercase tracking-[0.2em] mb-8 text-zinc-600 flex items-center gap-4">
+            <span class="w-10 h-[2px] bg-[#ff6700]"></span> Capítulos Disponibles
         </h3>
         <div id="lista-capitulos" class="grid gap-4">
             </div>
     </div>
 
-    <div id="comentarios-container" class="max-w-[1400px] mx-auto px-[8%] pb-20"></div>
+    <div id="comentarios-container" class="max-w-[1400px] mx-auto px-[8%] pb-24"></div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
@@ -81,54 +107,126 @@
             document.getElementById('navbar-placeholder').innerHTML = html;
         });
 
-        async function init() {
-            const id = new URLSearchParams(window.location.search).get('id');
-            
+        async function loadAllContent() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const id = urlParams.get('id');
+
+            // 1. Traer datos del Manga y de los Capítulos en paralelo
             const { data: m } = await _supabase.from('Mangas').select('*').eq('id', id).single();
-            const { data: caps } = await _supabase.from('Capitulos').select('*').eq('manga_id', id).order('numero_capitulo', { ascending: false });
+            const { data: caps } = await _supabase.from('Capitulos').select('*').eq('manga_id', id).order('numero_capitulo', { ascending: true });
 
             if (m) {
-                const leerLink = caps && caps.length > 0 ? caps[caps.length - 1].leer_url : m.leer_url;
+                // PRIORIDAD DEL BOTÓN: 
+                // Si hay capítulo 1 en la tabla de Capítulos, úsalo. 
+                // Si no, usa el leer_url de la tabla Mangas. 
+                // Si no hay nada, envía al inicio.
+                let targetUrl = "#";
+                if (caps && caps.length > 0) {
+                    targetUrl = caps[0].leer_url;
+                } else if (m.leer_url) {
+                    targetUrl = m.leer_url;
+                }
 
-                document.getElementById('manga-content').innerHTML = `
+                document.getElementById('manga-main-container').innerHTML = `
                     <div class="hero-section" style="background-image: url('${m.banner_url}')">
-                        <div class="content-overlay flex flex-col md:flex-row gap-10 items-center md:items-end">
-                            <img src="${m.portada_url}" class="w-64 rounded-xl poster-shadow relative -mb-20 hidden md:block">
+                        <div class="content-overlay flex flex-col md:flex-row gap-12 items-center md:items-end">
+                            <img src="${m.portada_url}" class="w-72 rounded-2xl poster-shadow hidden md:block -mb-24">
                             <div class="flex-1 text-center md:text-left">
-                                <h1 class="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4">${m.titulo}</h1>
-                                <p class="text-zinc-300 text-lg max-w-2xl mb-8 leading-relaxed">${m.sinopsis || ''}</p>
-                                <a href="lector.html?url=${encodeURIComponent(leerLink)}" 
-                                   class="inline-block bg-[#ff6700] hover:bg-[#ff4500] text-white px-12 py-4 rounded-lg font-black uppercase tracking-widest transition transform hover:scale-105 shadow-xl shadow-orange-900/20">
-                                    Leer Ahora
+                                <h1 class="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-4 leading-none">${m.titulo}</h1>
+                                <p class="text-zinc-400 text-lg max-w-2xl mb-10 leading-relaxed font-medium">${m.sinopsis || 'Sin descripción disponible.'}</p>
+                                <a href="lector.html?url=${encodeURIComponent(targetUrl)}" class="btn-principal">
+                                    <i class="fas fa-play mr-2 text-sm"></i> Leer Capítulo 1
                                 </a>
                             </div>
                         </div>
                     </div>
                 `;
                 
-                renderCaps(caps);
-                // Aquí iría tu función setupComments(id)
+                renderChapters(caps);
+                setupComments(id);
             }
         }
 
-        function renderCaps(caps) {
-            const list = document.getElementById('lista-capitulos');
+        function renderChapters(caps) {
+            const container = document.getElementById('lista-capitulos');
             if (!caps || caps.length === 0) {
-                list.innerHTML = `<p class="text-zinc-700 italic border border-zinc-900 p-6 rounded-xl text-center">No hay capítulos cargados en la base de datos.</p>`;
+                container.innerHTML = `
+                    <div class="bg-zinc-900/20 border border-zinc-900 p-10 rounded-2xl text-center">
+                        <p class="text-zinc-600 italic">No hay capítulos cargados para este manga en la base de datos.</p>
+                    </div>`;
                 return;
             }
-            list.innerHTML = caps.map(c => `
-                <a href="lector.html?url=${encodeURIComponent(c.leer_url)}" class="cap-item p-5 rounded-xl flex justify-between items-center group">
-                    <div class="flex items-center gap-5">
-                        <span class="text-[#ff6700] font-black text-xl italic">#${c.numero_capitulo}</span>
-                        <span class="text-zinc-200 font-bold group-hover:text-white transition">${c.titulo_capitulo || 'Capítulo ' + c.numero_capitulo}</span>
+
+            container.innerHTML = caps.map(c => `
+                <a href="lector.html?url=${encodeURIComponent(c.leer_url)}" class="cap-card group">
+                    <div class="flex items-center gap-6">
+                        <span class="text-[#ff6700] font-black text-2xl italic tracking-tighter">#${c.numero_capitulo}</span>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-zinc-200 group-hover:text-white transition text-lg">${c.titulo_capitulo || 'Capítulo ' + c.numero_capitulo}</span>
+                            <span class="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Disponible</span>
+                        </div>
                     </div>
-                    <i class="fas fa-arrow-right text-zinc-800 group-hover:text-[#ff6700] transition-all"></i>
+                    <div class="w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center group-hover:border-[#ff6700] transition">
+                        <i class="fas fa-chevron-right text-zinc-700 group-hover:text-[#ff6700]"></i>
+                    </div>
                 </a>
             `).join('');
         }
 
-        init();
+        async function setupComments(mangaId) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const container = document.getElementById('comentarios-container');
+
+            if (user) {
+                container.innerHTML = `
+                    <div class="mt-10 bg-[#0a0a0a] p-10 rounded-3xl border border-zinc-900">
+                        <h3 class="text-2xl font-black mb-6 uppercase tracking-tight">Comunidad</h3>
+                        <textarea id="commentText" class="w-full bg-[#050505] border border-zinc-800 p-5 rounded-2xl text-white outline-none focus:border-[#ff6700] h-32 transition-all" placeholder="Deja tu comentario..."></textarea>
+                        <div class="flex justify-end mt-4">
+                            <button id="sendComment" class="bg-[#ff6700] px-10 py-3 rounded-xl font-black text-xs uppercase hover:bg-orange-600 transition shadow-lg shadow-orange-900/20">Publicar</button>
+                        </div>
+                    </div>
+                    <div id="lista-comentarios" class="mt-12 space-y-6"></div>
+                `;
+
+                document.getElementById('sendComment').onclick = async () => {
+                    const text = document.getElementById('commentText').value;
+                    if(!text.trim()) return;
+                    await _supabase.from('Comentarios').insert([{ user_id: user.id, manga_id: mangaId, contenido: text, user_email: user.email }]);
+                    document.getElementById('commentText').value = '';
+                    loadComments(mangaId);
+                };
+            } else {
+                container.innerHTML = `
+                    <div class="mt-10 bg-zinc-900/10 p-12 rounded-3xl border border-dashed border-zinc-800 text-center">
+                        <p class="text-zinc-500 mb-6 font-medium">Únete a la charla. Inicia sesión para comentar.</p>
+                        <a href="login.html" class="inline-block bg-white text-black px-8 py-3 rounded-xl font-black text-xs uppercase hover:bg-[#ff6700] hover:text-white transition">Iniciar Sesión</a>
+                    </div>
+                    <div id="lista-comentarios" class="mt-12 space-y-6"></div>`;
+            }
+            loadComments(mangaId);
+        }
+
+        async function loadComments(mangaId) {
+            const { data: comentarios } = await _supabase.from('Comentarios').select('*').eq('manga_id', mangaId).order('created_at', { ascending: false });
+            const lista = document.getElementById('lista-comentarios');
+            lista.innerHTML = comentarios?.map(c => `
+                <div class="p-6 bg-[#0a0a0a] rounded-2xl border border-zinc-900 flex gap-5">
+                    <div class="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center font-black text-[#ff6700] flex-shrink-0">
+                        ${c.user_email[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-sm font-black text-zinc-300">${c.user_email.split('@')[0]}</span>
+                            <span class="text-[10px] text-zinc-600 font-bold">${new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-zinc-400 text-sm leading-relaxed">${c.contenido}</p>
+                    </div>
+                </div>
+            `).join('') || '';
+        }
+
+        loadAllContent();
     </script>
 </body>
 </html>
