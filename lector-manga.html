@@ -130,14 +130,29 @@
             const mangaUrl = params.get('url');
 
             if (!mangaUrl) {
-                document.getElementById('manga-viewer').innerHTML = "<p class='mt-20 text-zinc-500'>Error: No se encontró la URL del manga.</p>";
+                document.getElementById('manga-viewer').innerHTML = "<p class='mt-20 text-zinc-500 text-center uppercase font-bold'>Error: No se encontraron imágenes para este capítulo.</p>";
                 return;
             }
 
+            // Separamos los links que vienen en la URL (Supabase los envía separados por coma si es un Array)
+            const urls = mangaUrl.split(',');
             const viewer = document.getElementById('manga-viewer');
-            viewer.innerHTML = `<img src="${mangaUrl}" class="manga-page" alt="Contenido del Manga">`;
             
-            // Si necesitas que el botón "Siguiente" haga algo específico, puedes programarlo aquí
+            // Limpiamos el mensaje de cargando
+            viewer.innerHTML = "";
+
+            // Creamos una imagen para cada URL encontrada
+            urls.forEach((link) => {
+                if (link.trim() !== "") {
+                    const img = document.createElement('img');
+                    img.src = link.trim();
+                    img.className = 'manga-page';
+                    img.alt = 'Página del Manga';
+                    viewer.appendChild(img);
+                }
+            });
+            
+            // Activamos el botón "Siguiente" por si quieres programarlo luego
             document.getElementById('next-cap').classList.remove('disabled');
         }
 
