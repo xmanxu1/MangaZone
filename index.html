@@ -3,88 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Biblioteca</title>
+    <title>MangaZone | Catálogo</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: #050505; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            margin: 0; 
-        }
-        
-        /* Contenedor principal en cuadrícula */
+        body { background: #050505; color: white; font-family: 'Inter', sans-serif; }
         .manga-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
             padding: 40px 8%;
         }
-
-        /* Estilo de cada tarjeta de manga */
         .manga-card {
             background: #111;
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: 0.3s;
             border: 1px solid #222;
             text-decoration: none;
             color: white;
-            display: flex;
-            flex-direction: column;
         }
-
         .manga-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(255, 103, 0, 0.3);
+            transform: translateY(-8px);
             border-color: #ff6700;
+            box-shadow: 0 10px 20px rgba(255, 103, 0, 0.2);
         }
-
-        .manga-card img {
-            width: 100%;
-            height: 300px;
-            object-fit: cover;
-        }
-
-        .manga-info {
-            padding: 15px;
-        }
-
-        .manga-title {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .neon-logo {
+        .manga-card img { width: 100%; height: 260px; object-fit: cover; }
+        .neon-title {
             color: #ff6700;
             font-weight: 900;
             text-transform: uppercase;
+            padding: 30px 8% 0;
+            font-size: 1.8rem;
             letter-spacing: 2px;
-            padding: 25px 8% 0;
-            display: block;
-            font-size: 1.5rem;
-        }
-
-        .section-title {
-            padding: 20px 8% 0;
-            color: #555;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 2px;
-            font-weight: 700;
         }
     </style>
 </head>
 <body>
 
-    <div class="neon-logo">MangaZone</div>
-    <div class="section-title">Tu Biblioteca Personal</div>
+    <h1 class="neon-title">MangaZone</h1>
+    <p class="px-[8%] text-zinc-500 text-sm uppercase font-bold tracking-widest">Biblioteca Global</p>
 
     <div id="manga-container" class="manga-grid">
-        <div class="text-orange-500 animate-pulse">Cargando biblioteca...</div>
+        <div class="animate-pulse text-orange-500">Conectando con la base de datos...</div>
     </div>
 
     <script type="module">
@@ -95,29 +55,17 @@
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
         async function load() {
-            // ELIMINAMOS EL .limit(1) para traer TODO
-            const { data, error } = await _supabase
-                .from('Mangas')
-                .select('*')
-                .order('titulo', { ascending: true }); // Opcional: ordenar por nombre
-
-            if (error) {
-                console.error("Error cargando datos:", error);
-                return;
-            }
-
+            const { data, error } = await _supabase.from('Mangas').select('*');
             if (data) {
                 const container = document.getElementById('manga-container');
-                container.innerHTML = ''; // Limpiar el "Cargando"
-
+                container.innerHTML = '';
                 data.forEach(m => {
-                    // Creamos una tarjeta por cada fila de la tabla
                     container.innerHTML += `
-                        <a href="lector-manga.html?url=${encodeURIComponent(m.leer_url)}" class="manga-card">
+                        <a href="detalles.html?id=${m.id}" class="manga-card">
                             <img src="${m.portada_url}" alt="${m.titulo}">
-                            <div class="manga-info">
-                                <div class="manga-title">${m.titulo}</div>
-                                <p class="text-zinc-500 text-xs line-clamp-2">${m.sinopsis || 'Sin descripción'}</p>
+                            <div class="p-3">
+                                <h3 class="font-bold text-sm uppercase truncate">${m.titulo}</h3>
+                                <span class="text-zinc-600 text-[10px] font-bold">MANGA</span>
                             </div>
                         </a>
                     `;
