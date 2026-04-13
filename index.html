@@ -6,29 +6,99 @@
     <title>MangaZone | Inicio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #050505; color: white; font-family: 'Inter', sans-serif; margin: 0; }
-        .swiper-hero { width: 100%; height: 50vh; }
+        body { 
+            background: #050505; 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+        }
+        
+        /* --- CORRECCIÓN CLAVE --- */
+        /* Definimos la altura del carrusel para que vuelva a ser un "rectángulo grande" */
+        .swiper-hero {
+            width: 100%;
+            height: 70vh; /* Ocupa el 70% de la altura de la ventana */
+            position: relative;
+        }
+        
+        .swiper-slide {
+            display: flex;
+            align-items: center;
+            background-size: cover;
+            background-position: center 20%;
+            position: relative;
+        }
+
+        /* Degradado de fondo para legibilidad (modo MangaDex) */
         .hero-overlay {
-            position: absolute; inset: 0;
-            background: linear-gradient(to top, #050505 10%, transparent);
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #050505 10%, transparent 100%),
+                        linear-gradient(to right, #050505 20%, transparent 80%);
+            z-index: 1;
         }
+
+        .hero-content-wrapper {
+            position: relative;
+            z-index: 2;
+            padding: 0 8%;
+            width: 100%;
+        }
+
+        /* Tarjeta de portada flotante profesional */
+        .poster-card {
+            width: 200px;
+            height: 290px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-action {
+            background: #ff6700;
+            padding: 12px 35px;
+            border-radius: 8px;
+            font-weight: 900;
+            text-transform: uppercase;
+            transition: 0.3s;
+            display: inline-block;
+        }
+        .btn-action:hover {
+            transform: scale(1.05);
+            background: #ff4500;
+            box-shadow: 0 0 20px rgba(255, 103, 0, 0.5);
+        }
+
+        /* Estilos para el Catálogo (Grid) */
         .manga-card {
-            background: #111; border-radius: 8px; overflow: hidden; border: 1px solid #222; transition: 0.3s ease;
+            background: #111;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #222;
+            transition: 0.3s ease;
         }
-        .manga-card:hover { transform: translateY(-5px); border-color: #ff6700; }
+        .manga-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff6700;
+        }
     </style>
 </head>
 <body>
 
     <div id="navbar-placeholder"></div>
 
-    <div class="swiper swiper-hero">
-        <div class="swiper-wrapper" id="hero-wrapper"></div>
+    <div class="swiper swiper-hero" id="hero-slider">
+        <div class="swiper-wrapper" id="hero-wrapper">
+            <div class="swiper-slide text-orange-500 animate-pulse justify-center">Conectando...</div>
+        </div>
+        <div class="swiper-pagination"></div>
     </div>
 
-    <main class="max-w-[1400px] mx-auto px-[8%] py-10">
-        <h2 class="text-zinc-600 font-bold uppercase tracking-widest text-[10px] mb-6">Catálogo de Mangas</h2>
+    <main class="max-w-[1400px] mx-auto px-[5%] py-12">
+        <h2 class="text-xs text-zinc-600 font-bold uppercase tracking-widest mb-8">Biblioteca Completa</h2>
         <div id="manga-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
             </div>
     </main>
@@ -36,72 +106,106 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
         import Swiper from 'https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.mjs'
-
+        
+        // Supabase Config
         const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co'
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        let allMangas = [];
+        let allMangas = []; // Para el buscador
 
-        // 1. CARGAR NAVBAR
+        // 1. CARGAR LA NAVBAR EXTERNA
         fetch('navbar.html')
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('navbar-placeholder').innerHTML = html;
-                initBuscador(); // Activamos el buscador después de cargar la navbar
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('navbar-placeholder').innerHTML = data;
+                
+                // IMPORTANTE: Activar el buscador de la navbar si estamos en index.html
+                if(typeof initBuscador === "function") initBuscador();
             });
 
         // 2. OBTENER DATOS DE SUPABASE
-        async function loadData() {
-            const { data } = await _supabase.from('Mangas').select('*');
+        async function loadContent() {
+            const { data, error } = await _supabase.from('Mangas').select('*');
+
             if (data) {
-                allMangas = data;
+                allMangas = data; // Guardamos para buscar
                 renderHero(data);
                 renderGrid(data);
-                
-                new Swiper('.swiper-hero', { loop: true, autoplay: { delay: 5000 }, effect: 'fade' });
+                initSwiper();
             }
         }
 
+        // Dibuja el carrusel superior
         function renderHero(mangas) {
-            const hero = document.getElementById('hero-wrapper');
+            const heroWrapper = document.getElementById('hero-wrapper');
+            heroWrapper.innerHTML = ''; // Limpiar
+
             mangas.forEach(m => {
-                hero.innerHTML += `
+                heroWrapper.innerHTML += `
                     <div class="swiper-slide" style="background-image: url('${m.banner_url}')">
                         <div class="hero-overlay"></div>
-                        <div class="relative z-10 px-[8%] pt-20">
-                            <h2 class="text-5xl font-black uppercase mb-4">${m.titulo}</h2>
-                            <a href="detalles.html?id=${m.id}" class="bg-[#ff6700] px-6 py-2 rounded font-bold text-xs uppercase">Detalles</a>
+                        
+                        <div class="hero-content-wrapper flex flex-col md:flex-row items-center gap-12">
+                            <img src="${m.portada_url}" class="poster-card hidden md:block flex-shrink-0">
+                            
+                            <div class="text-center md:text-left flex-1 pt-10 md:pt-0">
+                                <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4 leading-none">${m.titulo}</h2>
+                                <p class="text-zinc-400 text-base max-w-xl mb-8 leading-relaxed line-clamp-3">${m.sinopsis || 'Sin descripción.'}</p>
+                                
+                                <a href="detalles.html?id=${m.id}" class="btn-action text-white no-underline">
+                                    VER DETALLES
+                                2</a>
+                            </div>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             });
         }
 
+        // Dibuja el catálogo inferior (grid)
         function renderGrid(mangas) {
-            const grid = document.getElementById('manga-grid');
-            grid.innerHTML = '';
+            const gridWrapper = document.getElementById('manga-grid');
+            gridWrapper.innerHTML = ''; // Limpiar
+
             mangas.forEach(m => {
-                grid.innerHTML += `
+                gridWrapper.innerHTML += `
                     <a href="detalles.html?id=${m.id}" class="manga-card">
-                        <img src="${m.portada_url}" class="w-full h-56 object-cover">
-                        <div class="p-3 text-center"><h3 class="font-bold text-[11px] uppercase truncate">${m.titulo}</h3></div>
-                    </a>`;
+                        <img src="${m.portada_url}" class="w-full h-64 object-cover">
+                        <div class="p-4">
+                            <h3 class="font-bold text-xs uppercase truncate mb-1">${m.titulo}</h3>
+                            <p class="text-zinc-600 text-[10px] line-clamp-2">${m.sinopsis || ''}</p>
+                        </div>
+                    </a>
+                `;
             });
         }
 
-        // 3. LÓGICA DEL BUSCADOR (Se activa desde el fetch de la navbar)
-        function initBuscador() {
-            const input = document.getElementById('searchInput');
-            if(input) {
-                input.addEventListener('input', (e) => {
+        // LÓGICA DEL BUSCADOR (Se conecta con navbar.html)
+        window.initBuscador = () => {
+            const searchInput = document.getElementById('searchInput');
+            if(searchInput) {
+                searchInput.addEventListener('input', (e) => {
                     const term = e.target.value.toLowerCase();
+                    // Filtramos la lista completa
                     const filtered = allMangas.filter(m => m.titulo.toLowerCase().includes(term));
-                    renderGrid(filtered); // Filtra solo la cuadrícula
+                    renderGrid(filtered); // Solo actualizamos la cuadrícula de abajo
                 });
             }
         }
 
-        loadData();
+        // Inicializar Swiper con rotación de 5s
+        function initSwiper() {
+            new Swiper('#hero-slider', {
+                loop: true,
+                autoplay: { delay: 5000, disableOnInteraction: false },
+                pagination: { el: '.swiper-pagination', clickable: true },
+                effect: 'fade', // Transición suave
+                fadeEffect: { crossFade: true }
+            });
+        }
+
+        loadContent();
     </script>
 </body>
 </html>
