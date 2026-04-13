@@ -2,55 +2,151 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangaZone | Lector</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #050505; color: white; margin: 0; }
-        .manga-image { width: 100%; max-width: 800px; display: block; margin: 0 auto; }
-    </style>
-</head>
-<body>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
-    <nav class="fixed top-0 w-full bg-black/80 backdrop-blur-md p-4 z-50 flex justify-between items-center border-b border-white/10">
-        <a href="index.html" class="text-[#ff6700] font-black uppercase italic">MangaZone</a>
-        <div id="info-cap" class="text-xs font-bold uppercase tracking-widest text-zinc-400">Cargando...</div>
-        <button onclick="window.history.back()" class="text-white text-xs uppercase font-bold">Volver</button>
-    </nav>
-
-    <main id="viewer" class="pt-20 pb-10 px-4">
-        </main>
-
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const imagesRaw = decodeURIComponent(params.get('images'));
-        const capNum = params.get('cap');
-
-        document.getElementById('info-cap').innerText = `Capítulo ${capNum}`;
-
-        function inicializarLector() {
-            const viewer = document.getElementById('viewer');
-            let listaFinal = [];
-
-            try {
-                // Intentamos convertir el texto en una lista (Array)
-                const parsed = JSON.parse(imagesRaw);
-                listaFinal = Array.isArray(parsed) ? parsed : [parsed];
-            } catch (e) {
-                // Si no es un JSON válido (es solo una URL de texto), la metemos en una lista
-                listaFinal = [imagesRaw];
-            }
-
-            // Renderizar las imágenes
-            if (listaFinal.length > 0 && listaFinal[0] !== "null") {
-                viewer.innerHTML = listaFinal.map(img => `
-                    <img src="${img}" class="manga-image mb-4 shadow-2xl" loading="lazy">
-                `).join('');
-            } else {
-                viewer.innerHTML = `<div class="text-center py-20 text-zinc-600 uppercase font-black">Error: No hay imágenes en este capítulo.</div>`;
-            }
+        body { 
+            background: #050505; 
+            color: white; 
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        inicializarLector();
+        /* Contenedor que permite que la imagen dicte el largo */
+        .reader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .manga-page {
+            width: 100%;
+            max-width: 850px; /* Tamaño ideal para lectura en PC */
+            height: auto;      /* ESTO EVITA QUE LA IMAGEN SE CORTE */
+            display: block;
+            object-fit: contain;
+            margin: 0 auto;
+        }
+
+        /* Espacio sutil entre páginas para distinguir el cambio */
+        .spacer {
+            height: 4px;
+            width: 100%;
+            background: #050505;
+        }
+
+        /* Barra de navegación superior */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 100;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease;
+        }
+
+        .top-nav:hover { transform: translateY(0); }
+
+        /* Estilo de los botones */
+        .btn-back {
+            background: #111;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            border-color: #ff6700;
+            color: #ff6700;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <nav class="top-nav">
+        <a href="index.html" class="text-[#ff6700] font-black text-xl italic tracking-tighter">MZ</a>
+        <div id="cap-label" class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+            Cargando Capítulo...
+        </div>
+        <button onclick="window.history.back()" class="btn-back">
+            <i class="fas fa-arrow-left mr-2"></i> Salir
+        </button>
+    </nav>
+
+    <main id="manga-viewer" class="reader-container pt-20 pb-10">
+        <div class="py-20 text-zinc-700 font-black uppercase tracking-widest animate-pulse">
+            Preparando páginas...
+        </div>
+    </main>
+
+    <script>
+        // 1. Obtener parámetros de la URL
+        const params = new URLSearchParams(window.location.search);
+        const imagesData = params.get('images') || params.get('url');
+        const capNumber = params.get('cap');
+
+        // 2. Actualizar etiqueta de capítulo
+        if (capNumber) {
+            document.getElementById('cap-label').innerText = `Capítulo ${capNumber}`;
+        }
+
+        // 3. Función principal para renderizar
+        function renderizarLector() {
+            const viewer = document.getElementById('manga-viewer');
+            
+            if (!imagesData || imagesData === "null") {
+                viewer.innerHTML = `<div class="py-40 text-zinc-500 font-bold uppercase text-xs">El contenido no está disponible</div>`;
+                return;
+            }
+
+            let paginas = [];
+
+            try {
+                // Intentamos parsear si viene como formato Array de Supabase
+                const decoded = decodeURIComponent(imagesData);
+                const parsed = JSON.parse(decoded);
+                paginas = Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {
+                // Si falla el parse (es un link directo de texto), lo usamos como único elemento
+                paginas = [decodeURIComponent(imagesData)];
+            }
+
+            // Limpiamos el cargando y generamos las imágenes
+            viewer.innerHTML = paginas.map(url => {
+                // Limpieza extra por si el link viene con caracteres de escape
+                const cleanUrl = url.replace(/["'\[\]]/g, "").trim();
+                
+                return `
+                    <img src="${cleanUrl}" 
+                         class="manga-page" 
+                         loading="lazy" 
+                         onerror="this.src='https://via.placeholder.com/800x1200?text=Error+al+cargar+página'">
+                    <div class="spacer"></div>
+                `;
+            }).join('');
+        }
+
+        // Ejecutar al cargar la página
+        window.onload = renderizarLector;
     </script>
 </body>
 </html>
