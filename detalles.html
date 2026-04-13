@@ -5,37 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangaZone | Detalles</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        
+        body { background-color: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; }
         .hero-banner {
             height: 50vh; width: 100%;
             background-size: cover; background-position: center 20%;
-            position: relative; opacity: 0; transition: opacity 1s ease;
+            position: relative;
         }
-        .hero-banner.loaded { opacity: 1; }
         .hero-banner::after {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(to top, #050505 10%, transparent);
         }
-
-        .main-content { position: relative; z-index: 10; margin-top: -180px; padding: 0 8% 50px; }
+        .main-content { position: relative; z-index: 10; margin-top: -180px; padding: 0 8%; }
         .poster {
             width: 280px; border-radius: 15px;
             box-shadow: 0 25px 50px rgba(0,0,0,1);
             border: 1px solid rgba(255,255,255,0.1);
         }
-
         .btn-leer {
             background: #ff6700; color: white; padding: 14px 45px;
             border-radius: 8px; font-weight: 900; text-transform: uppercase;
             transition: 0.3s; display: inline-block; cursor: pointer;
         }
         .btn-leer:hover { transform: scale(1.05); background: #ff4500; box-shadow: 0 0 25px rgba(255, 103, 0, 0.4); }
-
-        /* Estilos Comentarios */
-        .comment-box { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 15px; padding: 25px; margin-top: 40px; }
-        .comment-item { background: rgba(255,255,255,0.03); border: 1px solid #222; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        
+        /* Estilo de la lista de capítulos */
+        .cap-link {
+            background: #0a0a0a; border: 1px solid #1a1a1a;
+            padding: 15px 20px; border-radius: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: 0.3s; text-decoration: none; color: inherit;
+        }
+        .cap-link:hover { border-color: #ff6700; background: #111; transform: translateX(5px); }
     </style>
 </head>
 <body>
@@ -44,6 +46,14 @@
 
     <div id="manga-detail-container">
         </div>
+
+    <div class="max-w-[1400px] mx-auto px-[8%] py-10">
+        <h3 class="text-xl font-black uppercase tracking-tighter mb-6 text-zinc-500 flex items-center gap-3">
+            <i class="fas fa-layer-group"></i> Capítulos Disponibles
+        </h3>
+        <div id="lista-capitulos" class="grid gap-3">
+            </div>
+    </div>
 
     <div id="comentarios-container" class="max-w-[1400px] mx-auto px-[8%] pb-20"></div>
 
@@ -54,97 +64,46 @@
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        // 1. CARGAR NAVBAR
+        // 1. Cargar Navbar
         fetch('navbar.html').then(res => res.text()).then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
         });
 
-        async function loadManga() {
+        async function loadPage() {
             const urlParams = new URLSearchParams(window.location.search);
             const id = urlParams.get('id');
 
-            const { data: m, error } = await _supabase.from('Mangas').select('*').eq('id', id).single();
+            // Cargar Manga e info
+            const { data: m } = await _supabase.from('Mangas').select('*').eq('id', id).single();
+            
+            // Cargar Capítulos
+            const { data: caps } = await _supabase.from('Capitulos')
+                .select('*')
+                .eq('manga_id', id)
+                .order('numero_capitulo', { ascending: false });
 
             if (m) {
+                // El botón "Leer" lleva al último capítulo por defecto si existen
+                const linkLectura = caps && caps.length > 0 ? caps[0].leer_url : m.leer_url;
+
                 document.getElementById('manga-detail-container').innerHTML = `
-                    <div class="hero-banner" id="banner" style="background-image: url('${m.banner_url}')"></div>
+                    <div class="hero-banner" style="background-image: url('${m.banner_url}')"></div>
                     <div class="main-content flex flex-col md:flex-row gap-12">
-                        <div class="flex-shrink-0"><img src="${m.portada_url}" class="poster"></div>
+                        <img src="${m.portada_url}" class="poster">
                         <div class="flex-1 pt-24">
-                            <h1 class="text-6xl font-black uppercase tracking-tighter mb-4">${m.titulo}</h1>
-                            <p class="text-zinc-400 text-lg leading-relaxed mb-8 max-w-3xl">${m.sinopsis || 'Sin descripción disponible.'}</p>
-                            <a href="lector-manga.html?url=${encodeURIComponent(m.leer_url)}" class="btn-leer">LEER AHORA</a>
+                            <h1 class="text-5xl md:text-7xl font-black uppercase mb-4 leading-none">${m.titulo}</h1>
+                            <p class="text-zinc-400 text-lg mb-8 max-w-2xl">${m.sinopsis || ''}</p>
+                            <a href="lector.html?url=${encodeURIComponent(linkLectura)}" class="btn-leer">Leer Ahora</a>
                         </div>
                     </div>
                 `;
-                setTimeout(() => document.getElementById('banner').classList.add('loaded'), 100);
                 
-                // Cargar Sistema de Comentarios
+                renderCapitulos(caps);
                 setupComments(id);
             }
         }
 
-        async function setupComments(mangaId) {
-            const { data: { user } } = await _supabase.auth.getUser();
-            const container = document.getElementById('comentarios-container');
-
-            if (user) {
-                container.innerHTML = `
-                    <div class="comment-box">
-                        <h3 class="text-xl font-bold mb-4 text-[#ff6700] uppercase tracking-widest">Comentarios</h3>
-                        <textarea id="commentText" class="w-full bg-[#111] border border-zinc-800 p-4 rounded-lg text-white outline-none focus:border-[#ff6700] h-32 resize-none" placeholder="Escribe tu opinión sobre este manga..."></textarea>
-                        <div class="flex justify-end mt-4">
-                            <button id="sendComment" class="bg-[#ff6700] px-8 py-2 rounded font-black text-xs uppercase hover:bg-orange-600 transition">Publicar</button>
-                        </div>
-                    </div>
-                    <div id="lista-comentarios" class="mt-10"></div>
-                `;
-
-                document.getElementById('sendComment').onclick = async () => {
-                    const contenido = document.getElementById('commentText').value;
-                    if(!contenido.trim()) return;
-
-                    const { error } = await _supabase.from('Comentarios').insert([
-                        { user_id: user.id, manga_id: mangaId, contenido: contenido, user_email: user.email }
-                    ]);
-
-                    if (!error) {
-                        document.getElementById('commentText').value = '';
-                        loadComments(mangaId);
-                    }
-                };
-            } else {
-                container.innerHTML = `
-                    <div class="mt-20 bg-zinc-900/30 p-10 rounded-2xl text-center border border-zinc-800">
-                        <p class="text-zinc-500 mb-4 font-medium text-sm italic">Debes iniciar sesión para comentar.</p>
-                        <a href="login.html" class="inline-block border border-[#ff6700] text-[#ff6700] px-6 py-2 rounded font-bold text-xs uppercase hover:bg-[#ff6700] hover:text-white transition">Ir al Login</a>
-                    </div>
-                    <div id="lista-comentarios" class="mt-10"></div>
-                `;
-            }
-            loadComments(mangaId);
-        }
-
-        async function loadComments(mangaId) {
-            const { data: comentarios } = await _supabase.from('Comentarios').select('*').eq('manga_id', mangaId).order('created_at', { ascending: false });
-            const lista = document.getElementById('lista-comentarios');
-            
-            if (comentarios && comentarios.length > 0) {
-                lista.innerHTML = comentarios.map(c => `
-                    <div class="comment-item">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[10px] font-black text-[#ff6700] tracking-widest uppercase">${c.user_email.split('@')[0]}</span>
-                            <span class="text-[9px] text-zinc-600 uppercase font-bold">${new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p class="text-zinc-400 text-sm leading-relaxed">${c.contenido}</p>
-                    </div>
-                `).join('');
-            } else {
-                lista.innerHTML = '<p class="text-zinc-700 text-center text-xs py-10">Aún no hay comentarios en este manga.</p>';
-            }
-        }
-
-        loadManga();
-    </script>
-</body>
-</html>
+        function renderCapitulos(caps) {
+            const lista = document.getElementById('lista-capitulos');
+            if (!caps || caps.length === 0) {
+                lista.innerHTML = `<p class="text-zinc-7
