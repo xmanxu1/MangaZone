@@ -8,50 +8,62 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; }
-        .hero-banner {
-            height: 50vh; width: 100%;
-            background-size: cover; background-position: center 20%;
+        
+        /* Contenedor del Banner con Degradado Integrado */
+        .hero-section {
             position: relative;
+            min-height: 60vh;
+            width: 100%;
+            background-size: cover;
+            background-position: center 20%;
+            display: flex;
+            align-items: flex-end;
         }
-        .hero-banner::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to top, #050505 10%, transparent);
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #050505 5%, rgba(5, 5, 5, 0.5) 50%, transparent 100%);
         }
-        .main-content { position: relative; z-index: 10; margin-top: -180px; padding: 0 8%; }
-        .poster {
-            width: 280px; border-radius: 15px;
-            box-shadow: 0 25px 50px rgba(0,0,0,1);
+
+        .content-overlay {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            padding: 0 8% 40px;
+        }
+
+        .poster-shadow {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
             border: 1px solid rgba(255,255,255,0.1);
         }
-        .btn-leer {
-            background: #ff6700; color: white; padding: 14px 45px;
-            border-radius: 8px; font-weight: 900; text-transform: uppercase;
-            transition: 0.3s; display: inline-block; cursor: pointer;
+
+        /* Estilo de Capítulos */
+        .cap-item {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            transition: 0.3s;
         }
-        .btn-leer:hover { transform: scale(1.05); background: #ff4500; box-shadow: 0 0 25px rgba(255, 103, 0, 0.4); }
-        
-        /* Estilo de la lista de capítulos */
-        .cap-link {
-            background: #0a0a0a; border: 1px solid #1a1a1a;
-            padding: 15px 20px; border-radius: 12px;
-            display: flex; justify-content: space-between; align-items: center;
-            transition: 0.3s; text-decoration: none; color: inherit;
+        .cap-item:hover {
+            border-color: #ff6700;
+            background: #111;
+            transform: translateX(8px);
         }
-        .cap-link:hover { border-color: #ff6700; background: #111; transform: translateX(5px); }
     </style>
 </head>
 <body>
 
     <div id="navbar-placeholder"></div>
 
-    <div id="manga-detail-container">
+    <div id="manga-content">
         </div>
 
-    <div class="max-w-[1400px] mx-auto px-[8%] py-10">
-        <h3 class="text-xl font-black uppercase tracking-tighter mb-6 text-zinc-500 flex items-center gap-3">
-            <i class="fas fa-layer-group"></i> Capítulos Disponibles
+    <div class="max-w-[1400px] mx-auto px-[8%] py-12">
+        <h3 class="text-xl font-black uppercase tracking-widest mb-8 text-zinc-500 flex items-center gap-3">
+            <i class="fas fa-layer-group text-[#ff6700]"></i> Capítulos Disponibles
         </h3>
-        <div id="lista-capitulos" class="grid gap-3">
+        <div id="lista-capitulos" class="grid gap-4">
             </div>
     </div>
 
@@ -64,46 +76,59 @@
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        // 1. Cargar Navbar
+        // Cargar Navbar
         fetch('navbar.html').then(res => res.text()).then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
         });
 
-        async function loadPage() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const id = urlParams.get('id');
-
-            // Cargar Manga e info
-            const { data: m } = await _supabase.from('Mangas').select('*').eq('id', id).single();
+        async function init() {
+            const id = new URLSearchParams(window.location.search).get('id');
             
-            // Cargar Capítulos
-            const { data: caps } = await _supabase.from('Capitulos')
-                .select('*')
-                .eq('manga_id', id)
-                .order('numero_capitulo', { ascending: false });
+            const { data: m } = await _supabase.from('Mangas').select('*').eq('id', id).single();
+            const { data: caps } = await _supabase.from('Capitulos').select('*').eq('manga_id', id).order('numero_capitulo', { ascending: false });
 
             if (m) {
-                // El botón "Leer" lleva al último capítulo por defecto si existen
-                const linkLectura = caps && caps.length > 0 ? caps[0].leer_url : m.leer_url;
+                const leerLink = caps && caps.length > 0 ? caps[caps.length - 1].leer_url : m.leer_url;
 
-                document.getElementById('manga-detail-container').innerHTML = `
-                    <div class="hero-banner" style="background-image: url('${m.banner_url}')"></div>
-                    <div class="main-content flex flex-col md:flex-row gap-12">
-                        <img src="${m.portada_url}" class="poster">
-                        <div class="flex-1 pt-24">
-                            <h1 class="text-5xl md:text-7xl font-black uppercase mb-4 leading-none">${m.titulo}</h1>
-                            <p class="text-zinc-400 text-lg mb-8 max-w-2xl">${m.sinopsis || ''}</p>
-                            <a href="lector.html?url=${encodeURIComponent(linkLectura)}" class="btn-leer">Leer Ahora</a>
+                document.getElementById('manga-content').innerHTML = `
+                    <div class="hero-section" style="background-image: url('${m.banner_url}')">
+                        <div class="content-overlay flex flex-col md:flex-row gap-10 items-center md:items-end">
+                            <img src="${m.portada_url}" class="w-64 rounded-xl poster-shadow relative -mb-20 hidden md:block">
+                            <div class="flex-1 text-center md:text-left">
+                                <h1 class="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4">${m.titulo}</h1>
+                                <p class="text-zinc-300 text-lg max-w-2xl mb-8 leading-relaxed">${m.sinopsis || ''}</p>
+                                <a href="lector.html?url=${encodeURIComponent(leerLink)}" 
+                                   class="inline-block bg-[#ff6700] hover:bg-[#ff4500] text-white px-12 py-4 rounded-lg font-black uppercase tracking-widest transition transform hover:scale-105 shadow-xl shadow-orange-900/20">
+                                    Leer Ahora
+                                </a>
+                            </div>
                         </div>
                     </div>
                 `;
                 
-                renderCapitulos(caps);
-                setupComments(id);
+                renderCaps(caps);
+                // Aquí iría tu función setupComments(id)
             }
         }
 
-        function renderCapitulos(caps) {
-            const lista = document.getElementById('lista-capitulos');
+        function renderCaps(caps) {
+            const list = document.getElementById('lista-capitulos');
             if (!caps || caps.length === 0) {
-                lista.innerHTML = `<p class="text-zinc-7
+                list.innerHTML = `<p class="text-zinc-700 italic border border-zinc-900 p-6 rounded-xl text-center">No hay capítulos cargados en la base de datos.</p>`;
+                return;
+            }
+            list.innerHTML = caps.map(c => `
+                <a href="lector.html?url=${encodeURIComponent(c.leer_url)}" class="cap-item p-5 rounded-xl flex justify-between items-center group">
+                    <div class="flex items-center gap-5">
+                        <span class="text-[#ff6700] font-black text-xl italic">#${c.numero_capitulo}</span>
+                        <span class="text-zinc-200 font-bold group-hover:text-white transition">${c.titulo_capitulo || 'Capítulo ' + c.numero_capitulo}</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-zinc-800 group-hover:text-[#ff6700] transition-all"></i>
+                </a>
+            `).join('');
+        }
+
+        init();
+    </script>
+</body>
+</html>
