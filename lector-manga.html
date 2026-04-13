@@ -12,84 +12,103 @@
             color: white; 
             margin: 0; 
             font-family: 'Inter', sans-serif;
-            /* Evitar selección de texto */
             user-select: none; 
             -webkit-user-select: none;
         }
 
-        /* Contenedor de imágenes */
         #manga-viewer {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-bottom: 100px; /* Espacio para la barra estática */
+            padding-bottom: 120px; 
         }
 
         .manga-page {
             max-width: 100%;
             height: auto;
             display: block;
-            pointer-events: none; /* Evita arrastrar la imagen */
+            pointer-events: none; 
         }
 
-        /* Barra de Navegación Estática Inferior */
+        /* Barra de Navegación Estática */
         .reader-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(15px);
             border-top: 1px solid #1a1a1a;
-            padding: 15px 20px;
+            padding: 15px 10px;
             z-index: 1000;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 12px;
         }
 
         .nav-btn {
-            background: #1a1a1a;
-            color: white;
-            padding: 10px 20px;
+            background: #151515;
+            color: #a1a1aa;
+            padding: 10px 18px;
             border-radius: 8px;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: 11px;
             transition: 0.3s;
             display: flex;
             align-items: center;
             gap: 8px;
+            border: 1px solid transparent;
         }
 
         .nav-btn:hover {
+            background: #202020;
+            color: white;
+            border-color: #333;
+        }
+
+        /* Estilo especial para el botón central de Capítulos */
+        .btn-center {
+            background: #1a1a1a;
+            color: #ff6700;
+            border: 1px solid rgba(255, 103, 0, 0.2);
+        }
+        
+        .btn-center:hover {
             background: #ff6700;
-            transform: translateY(-2px);
+            color: white;
+            border-color: #ff6700;
         }
 
         .nav-btn.disabled {
-            opacity: 0.3;
+            opacity: 0.2;
             pointer-events: none;
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <div id="manga-viewer">
-        <div id="loading-status" class="py-20 text-zinc-500 animate-pulse">Cargando páginas...</div>
+<body oncontextmenu="return false;">
+
+    <div id="manga-viewer">
+        <div id="loading-status" class="py-20 text-zinc-700 animate-pulse font-black uppercase tracking-widest">Cargando...</div>
     </div>
 
     <nav class="reader-nav">
         <a href="index.html" class="nav-btn">
             <i class="fas fa-home"></i> Inicio
         </a>
-        <div class="flex gap-2">
-            <button id="prev-cap" class="nav-btn disabled">
-                <i class="fas fa-arrow-left"></i> Anterior
-            </button>
-            <button id="next-cap" class="nav-btn disabled">
-                Siguiente <i class="fas fa-arrow-right"></i>
-            </button>
-        </div>
+        
+        <button id="prev-cap" class="nav-btn disabled">
+            <i class="fas fa-arrow-left"></i> Anterior
+        </button>
+
+        <button onclick="window.history.back()" class="nav-btn btn-center">
+            <i class="fas fa-list-ul"></i> Capítulos
+        </button>
+
+        <button id="next-cap" class="nav-btn disabled">
+            Siguiente <i class="fas fa-arrow-right"></i>
+        </button>
     </nav>
 
     <script type="module">
@@ -99,11 +118,10 @@
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        // 1. Bloqueo de Teclas Prohibidas (F12, Ctrl+U, etc)
+        // Bloqueos de seguridad
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'i' || e.key === 'j') || e.key === 'F12') {
                 e.preventDefault();
-                return false;
             }
         });
 
@@ -112,24 +130,15 @@
             const mangaUrl = params.get('url');
 
             if (!mangaUrl) {
-                document.getElementById('manga-viewer').innerHTML = "No se encontró el capítulo.";
+                document.getElementById('manga-viewer').innerHTML = "<p class='mt-20 text-zinc-500'>Error: No se encontró la URL del manga.</p>";
                 return;
             }
 
-            // Aquí cargamos la imagen (puedes adaptar esto si tienes múltiples imágenes por capítulo)
             const viewer = document.getElementById('manga-viewer');
-            viewer.innerHTML = `<img src="${mangaUrl}" class="manga-page" alt="Manga Page">`;
-
-            // Lógica para botones Anterior/Siguiente (Opcional si usas tabla Capitulos)
-            // Por ahora, como usas un link directo de ImgBB, estos botones te regresan a detalles.
-            setupNavigation();
-        }
-
-        function setupNavigation() {
-            // Ejemplo: El botón siguiente podría llevarte de vuelta para elegir otro
-            const nextBtn = document.getElementById('next-cap');
-            nextBtn.classList.remove('disabled');
-            nextBtn.onclick = () => window.history.back();
+            viewer.innerHTML = `<img src="${mangaUrl}" class="manga-page" alt="Contenido del Manga">`;
+            
+            // Si necesitas que el botón "Siguiente" haga algo específico, puedes programarlo aquí
+            document.getElementById('next-cap').classList.remove('disabled');
         }
 
         initLector();
