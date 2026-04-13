@@ -5,148 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangaZone | Lector</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-
         body { 
-            background: #050505; 
+            background: #000; 
             color: white; 
-            font-family: 'Inter', sans-serif;
-            margin: 0;
+            margin: 0; 
+            padding: 0;
             overflow-x: hidden;
         }
 
-        /* Contenedor que permite que la imagen dicte el largo */
-        .reader-container {
+        /* CONTENEDOR DE LECTURA VERTICAL */
+        .manga-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            min-height: 100vh;
+            padding-top: 60px; /* Espacio para la barra superior */
         }
 
-        .manga-page {
-            width: 100%;
-            max-width: 850px; /* Tamaño ideal para lectura en PC */
-            height: auto;      /* ESTO EVITA QUE LA IMAGEN SE CORTE */
+        /* LA CLAVE: EL TAMAÑO DE LA IMAGEN */
+        .manga-image {
             display: block;
-            object-fit: contain;
+            width: 100%;           /* Se adapta al ancho del dispositivo */
+            max-width: 800px;      /* Límite para que no se pixele en PC */
+            height: auto !important; /* FUERZA EL ALTO AUTOMÁTICO PARA NO CORTAR */
             margin: 0 auto;
+            object-fit: contain;
         }
 
-        /* Espacio sutil entre páginas para distinguir el cambio */
-        .spacer {
-            height: 4px;
+        /* Separador negro entre páginas */
+        .divider {
+            height: 2px;
             width: 100%;
-            background: #050505;
+            background: #000;
         }
 
-        /* Barra de navegación superior */
-        .top-nav {
+        /* Barra de navegación */
+        .nav-reader {
             position: fixed;
             top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(15px);
+            width: 100%;
+            background: rgba(0,0,0,0.9);
+            padding: 15px 25px;
             z-index: 100;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: transform 0.3s ease;
-        }
-
-        .top-nav:hover { transform: translateY(0); }
-
-        /* Estilo de los botones */
-        .btn-back {
-            background: #111;
-            padding: 0.6rem 1.2rem;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: 0.3s;
-        }
-
-        .btn-back:hover {
-            border-color: #ff6700;
-            color: #ff6700;
+            border-bottom: 1px solid #222;
         }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <nav class="top-nav">
-        <a href="index.html" class="text-[#ff6700] font-black text-xl italic tracking-tighter">MZ</a>
-        <div id="cap-label" class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
-            Cargando Capítulo...
-        </div>
-        <button onclick="window.history.back()" class="btn-back">
-            <i class="fas fa-arrow-left mr-2"></i> Salir
-        </button>
+    <nav class="nav-reader">
+        <div class="text-[#ff6700] font-black italic">MANGAZONE</div>
+        <div id="display-cap" class="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Capítulo</div>
+        <button onclick="window.history.back()" class="text-xs font-bold uppercase hover:text-[#ff6700]">Volver</button>
     </nav>
 
-    <main id="manga-viewer" class="reader-container pt-20 pb-10">
-        <div class="py-20 text-zinc-700 font-black uppercase tracking-widest animate-pulse">
-            Preparando páginas...
-        </div>
-    </main>
+    <main id="manga-viewer" class="manga-container">
+        </main>
 
     <script>
-        // 1. Obtener parámetros de la URL
         const params = new URLSearchParams(window.location.search);
-        const imagesData = params.get('images') || params.get('url');
-        const capNumber = params.get('cap');
+        const imagesRaw = params.get('images') || params.get('url');
+        const capNum = params.get('cap');
 
-        // 2. Actualizar etiqueta de capítulo
-        if (capNumber) {
-            document.getElementById('cap-label').innerText = `Capítulo ${capNumber}`;
-        }
+        document.getElementById('display-cap').innerText = `Capítulo ${capNum}`;
 
-        // 3. Función principal para renderizar
-        function renderizarLector() {
+        function cargarContenido() {
             const viewer = document.getElementById('manga-viewer');
-            
-            if (!imagesData || imagesData === "null") {
-                viewer.innerHTML = `<div class="py-40 text-zinc-500 font-bold uppercase text-xs">El contenido no está disponible</div>`;
-                return;
-            }
+            if (!imagesRaw) return;
 
-            let paginas = [];
+            let listaLinks = [];
+            const decodedData = decodeURIComponent(imagesRaw);
 
             try {
-                // Intentamos parsear si viene como formato Array de Supabase
-                const decoded = decodeURIComponent(imagesData);
-                const parsed = JSON.parse(decoded);
-                paginas = Array.isArray(parsed) ? parsed : [parsed];
+                // Caso 1: Es un Array JSON (fila 6 de tu Supabase)
+                const parsed = JSON.parse(decodedData);
+                listaLinks = Array.isArray(parsed) ? parsed : [parsed];
             } catch (e) {
-                // Si falla el parse (es un link directo de texto), lo usamos como único elemento
-                paginas = [decodeURIComponent(imagesData)];
+                // Caso 2: Es un link simple (fila 5 de tu Supabase)
+                listaLinks = [decodedData];
             }
 
-            // Limpiamos el cargando y generamos las imágenes
-            viewer.innerHTML = paginas.map(url => {
-                // Limpieza extra por si el link viene con caracteres de escape
-                const cleanUrl = url.replace(/["'\[\]]/g, "").trim();
-                
+            // Renderizar imágenes limpiando caracteres extra como [ ] o " "
+            viewer.innerHTML = listaLinks.map(url => {
+                const linkLimpio = url.replace(/[\[\]"]/g, "").trim();
                 return `
-                    <img src="${cleanUrl}" 
-                         class="manga-page" 
-                         loading="lazy" 
-                         onerror="this.src='https://via.placeholder.com/800x1200?text=Error+al+cargar+página'">
-                    <div class="spacer"></div>
+                    <img src="${linkLimpio}" class="manga-image" loading="lazy">
+                    <div class="divider"></div>
                 `;
             }).join('');
         }
 
-        // Ejecutar al cargar la página
-        window.onload = renderizarLector;
+        window.onload = cargarContenido;
     </script>
 </body>
 </html>
