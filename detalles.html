@@ -6,102 +6,60 @@
     <title>MangaZone | Detalles</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
-        .manga-header { background-size: cover; background-position: center; position: relative; }
-        .manga-header::before { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, #050505 0%, rgba(5,5,5,0.8) 50%, rgba(5,5,5,0.4) 100%); }
-    </style>
 </head>
-<body>
+<body class="bg-[#050505] text-white font-['Inter']">
 
-    <nav class="p-6 flex justify-between items-center relative z-10">
-        <a href="index.html" class="text-[#ff6700] font-black text-2xl uppercase italic tracking-tighter">MangaZone</a>
-        <a href="admin.html" class="text-xs font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition">Entrar</a>
-    </nav>
-
-    <header id="manga-banner" class="manga-header min-h-[500px] flex items-end pb-12">
-        <div class="max-w-6xl mx-auto px-6 w-full relative z-10 grid md:grid-cols-[300px_1fr] gap-12 items-center">
-            <img id="manga-portada" src="" class="w-full rounded-3xl shadow-2xl border border-white/10" alt="Portada">
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex flex-col md:flex-row gap-8 items-center py-10">
+            <img id="manga-portada" src="" class="w-64 rounded-2xl shadow-2xl border border-white/10">
             <div>
-                <h1 id="manga-titulo" class="text-5xl md:text-7xl font-black uppercase italic mb-4">Cargando...</h1>
-                <p id="manga-descripcion" class="text-zinc-400 text-sm md:text-base leading-relaxed max-w-2xl mb-8">
-                    Obteniendo información de la base de datos...
-                </p>
-                <button class="bg-[#ff6700] text-white px-10 py-4 rounded-xl font-black uppercase italic tracking-widest hover:scale-105 transition">
-                    <i class="fas fa-play mr-2"></i> Leer Ahora
-                </button>
+                <h1 id="manga-titulo" class="text-5xl font-black uppercase italic mb-4 italic">Cargando...</h1>
+                <p id="manga-desc" class="text-zinc-400 mb-6">Obteniendo información...</p>
+                <button class="bg-[#ff6700] px-8 py-3 rounded-xl font-bold uppercase tracking-widest hover:scale-105 transition">Leer Ahora</button>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="max-w-6xl mx-auto px-6 py-12">
-        <div class="flex items-center gap-4 mb-8">
-            <div class="h-1 w-12 bg-[#ff6700]"></div>
-            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-zinc-500">Capítulos Disponibles</h2>
-        </div>
-
+        <h2 class="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 border-l-4 border-[#ff6700] pl-4">Capítulos Disponibles</h2>
         <div id="lista-capitulos" class="grid gap-3">
-            <div class="animate-pulse text-zinc-800 font-bold uppercase tracking-widest py-10">Buscando capítulos...</div>
-        </div>
-    </main>
+            </div>
+    </div>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-        
         const _supabase = createClient('https://uupnzgchqvqjxffiunae.supabase.co', 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L')
 
-        // 1. Obtener el ID del manga de la URL
         const params = new URLSearchParams(window.location.search);
         const mangaId = params.get('id');
 
-        async function cargarInformacionManga() {
+        async function init() {
             if (!mangaId) return;
 
-            // Obtener datos del Manga
-            const { data: manga } = await _supabase
-                .from('Mangas')
-                .select('*')
-                .eq('id', mangaId)
-                .single();
-
+            // Datos del manga
+            const { data: manga } = await _supabase.from('Mangas').select('*').eq('id', mangaId).single();
             if (manga) {
-                document.title = `${manga.titulo} | MangaZone`;
                 document.getElementById('manga-titulo').innerText = manga.titulo;
                 document.getElementById('manga-portada').src = manga.portada_url;
-                document.getElementById('manga-banner').style.backgroundImage = `url(${manga.portada_url})`;
-                // Si tienes una columna 'descripcion', la podrías poner aquí
             }
 
-            cargarCapitulos(mangaId);
-        }
-
-        // Bloque de código principal para cargar la lista
-        async function cargarCapitulos(mangaId) {
-            const { data: capitulos, error } = await _supabase
+            // Cargar Capítulos
+            const { data: capitulos } = await _supabase
                 .from('Capitulos')
                 .select('*')
                 .eq('manga_id', mangaId)
                 .order('numero_capitulo', { ascending: true });
 
-            const listaContainer = document.getElementById('lista-capitulos');
-            
-            if (capitulos && capitulos.length > 0) {
-                listaContainer.innerHTML = capitulos.map(cap => `
-                    <a href="lector-manga.html?mangaId=${mangaId}&cap=${cap.numero_capitulo}&url=${cap.leer_url}" 
-                       class="flex items-center justify-between bg-[#111] p-5 rounded-2xl border border-white/5 hover:border-[#ff6700]/50 transition-all group">
-                        <span class="font-bold uppercase tracking-widest text-sm">Capítulo ${cap.numero_capitulo}</span>
-                        <div class="flex items-center gap-4">
-                            <span class="text-[10px] font-bold text-zinc-600 uppercase italic opacity-0 group-hover:opacity-100 transition-all">Leer este cap</span>
-                            <i class="fas fa-play text-[#ff6700] text-xs"></i>
-                        </div>
+            const container = document.getElementById('lista-capitulos');
+            if (capitulos) {
+                container.innerHTML = capitulos.map(cap => `
+                    <a href="lector-manga.html?mangaId=${mangaId}&cap=${cap.numero_capitulo}&url=${encodeURIComponent(JSON.stringify(cap.leer_url))}" 
+                       class="flex items-center justify-between bg-[#111] p-5 rounded-2xl border border-white/5 hover:border-[#ff6700]/50 transition-all">
+                        <span class="font-bold uppercase text-sm">Capítulo ${cap.numero_capitulo}</span>
+                        <i class="fas fa-play text-[#ff6700]"></i>
                     </a>
                 `).join('');
-            } else {
-                listaContainer.innerHTML = "<p class='text-zinc-600 italic text-sm text-center py-10'>No hay capítulos disponibles todavía.</p>";
             }
         }
-
-        cargarInformacionManga();
+        init();
     </script>
 </body>
 </html>
