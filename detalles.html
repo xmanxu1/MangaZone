@@ -6,23 +6,56 @@
     <title>MangaZone | Detalles</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
+        .manga-header { 
+            background-size: cover; 
+            background-position: center; 
+            position: relative; 
+            min-height: 500px;
+            display: flex;
+            align-items: end;
+        }
+        .manga-header::before { 
+            content: ''; 
+            position: absolute; 
+            inset: 0; 
+            background: linear-gradient(0deg, #050505 15%, rgba(5,5,5,0.6) 100%); 
+        }
+    </style>
 </head>
-<body class="bg-[#050505] text-white font-['Inter']">
+<body>
 
-    <div class="max-w-6xl mx-auto p-6">
-        <header class="flex flex-col md:flex-row gap-8 items-center py-10">
-            <img id="manga-portada" src="" class="w-64 rounded-2xl shadow-2xl border border-white/10">
+    <nav class="p-6 flex justify-between items-center relative z-20">
+        <a href="index.html" class="text-[#ff6700] font-black text-2xl uppercase italic tracking-tighter">MangaZone</a>
+        <a href="admin.html" class="text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-white transition">Admin</a>
+    </nav>
+
+    <header id="manga-banner" class="manga-header pb-12">
+        <div class="max-w-6xl mx-auto px-6 w-full relative z-10 grid md:grid-cols-[260px_1fr] gap-10 items-center">
+            <img id="manga-portada" src="" class="w-full rounded-3xl shadow-2xl border border-white/10 hidden md:block" alt="Portada">
+            
             <div>
-                <h1 id="manga-titulo" class="text-5xl font-black uppercase italic mb-4 italic">Cargando...</h1>
-                <p id="manga-desc" class="text-zinc-400 mb-6">Obteniendo información...</p>
-                <button class="bg-[#ff6700] px-8 py-3 rounded-xl font-bold uppercase tracking-widest hover:scale-105 transition">Leer Ahora</button>
+                <h1 id="manga-titulo" class="text-5xl md:text-7xl font-black uppercase italic mb-4">Cargando...</h1>
+                <p id="manga-sinopsis" class="text-zinc-300 text-sm md:text-base leading-relaxed max-w-2xl mb-8 opacity-90">
+                    Buscando sinopsis...
+                </p>
+                <button class="bg-[#ff6700] text-white px-10 py-4 rounded-xl font-black uppercase italic tracking-widest hover:scale-105 transition shadow-lg shadow-orange-900/40">
+                    <i class="fas fa-play mr-2"></i> Leer Ahora
+                </button>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <h2 class="text-xs font-black uppercase tracking-[0.3em] text-zinc-500 mb-6 border-l-4 border-[#ff6700] pl-4">Capítulos Disponibles</h2>
+    <main class="max-w-6xl mx-auto px-6 py-12">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="h-1 w-10 bg-[#ff6700]"></div>
+            <h2 class="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Capítulos Disponibles</h2>
+        </div>
+
         <div id="lista-capitulos" class="grid gap-3">
             </div>
-    </div>
+    </main>
 
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
@@ -31,17 +64,25 @@
         const params = new URLSearchParams(window.location.search);
         const mangaId = params.get('id');
 
-        async function init() {
+        async function cargarPaginaDetalles() {
             if (!mangaId) return;
 
-            // Datos del manga
+            // 1. Obtener datos del manga (incluyendo tus nuevas columnas)
             const { data: manga } = await _supabase.from('Mangas').select('*').eq('id', mangaId).single();
+
             if (manga) {
                 document.getElementById('manga-titulo').innerText = manga.titulo;
                 document.getElementById('manga-portada').src = manga.portada_url;
+                
+                // Usamos los nombres exactos de tus columnas en Supabase
+                document.getElementById('manga-sinopsis').innerText = manga.sinopsis || "No hay sinopsis disponible.";
+                
+                // Si el banner_url existe, lo pone; si no, usa la portada
+                const bannerImg = manga['URL del banner'] || manga.portada_url;
+                document.getElementById('manga-banner').style.backgroundImage = `url('${bannerImg}')`;
             }
 
-            // Cargar Capítulos
+            // 2. Cargar los capítulos vinculados
             const { data: capitulos } = await _supabase
                 .from('Capitulos')
                 .select('*')
@@ -49,17 +90,20 @@
                 .order('numero_capitulo', { ascending: true });
 
             const container = document.getElementById('lista-capitulos');
-            if (capitulos) {
+            if (capitulos && capitulos.length > 0) {
                 container.innerHTML = capitulos.map(cap => `
                     <a href="lector-manga.html?mangaId=${mangaId}&cap=${cap.numero_capitulo}&url=${encodeURIComponent(JSON.stringify(cap.leer_url))}" 
-                       class="flex items-center justify-between bg-[#111] p-5 rounded-2xl border border-white/5 hover:border-[#ff6700]/50 transition-all">
-                        <span class="font-bold uppercase text-sm">Capítulo ${cap.numero_capitulo}</span>
-                        <i class="fas fa-play text-[#ff6700]"></i>
+                       class="flex items-center justify-between bg-[#111] p-5 rounded-2xl border border-white/5 hover:border-[#ff6700]/50 transition-all group">
+                        <span class="font-bold uppercase tracking-widest text-sm text-zinc-300 group-hover:text-white">Capítulo ${cap.numero_capitulo}</span>
+                        <i class="fas fa-play text-[#ff6700] text-xs opacity-50 group-hover:opacity-100 transition-all"></i>
                     </a>
                 `).join('');
+            } else {
+                container.innerHTML = "<p class='text-zinc-700 text-center py-10 italic uppercase text-xs font-bold'>Próximamente más capítulos</p>";
             }
         }
-        init();
+
+        cargarPaginaDetalles();
     </script>
 </body>
 </html>
