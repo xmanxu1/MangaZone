@@ -5,45 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangaZone | Lector</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #000; color: white; margin: 0; }
-        .neon-logo { color: #fff; text-shadow: 0 0 10px #ff6700, 0 0 20px #ff6700; font-weight: 900; text-transform: uppercase; text-decoration: none; }
-        .nav-lector { background: rgba(10, 10, 10, 0.95); border-bottom: 1px solid #222; height: 60px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .manga-wrapper { display: flex; justify-content: center; padding: 20px 0; background: #000; }
-        #manga-img { max-width: 100%; height: auto; display: block; }
+        body { 
+            background-color: #050505; 
+            color: white; 
+            margin: 0; 
+            font-family: 'Inter', sans-serif;
+            /* Evitar selección de texto */
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+
+        /* Contenedor de imágenes */
+        #manga-viewer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 100px; /* Espacio para la barra estática */
+        }
+
+        .manga-page {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: none; /* Evita arrastrar la imagen */
+        }
+
+        /* Barra de Navegación Estática Inferior */
+        .reader-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #1a1a1a;
+            padding: 15px 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: #1a1a1a;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 12px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover {
+            background: #ff6700;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <div id="manga-viewer">
+        <div id="loading-status" class="py-20 text-zinc-500 animate-pulse">Cargando páginas...</div>
+    </div>
 
-    <nav class="nav-lector px-6">
-        <div class="w-full flex justify-between items-center">
-            <a href="index.html" class="neon-logo text-lg">MangaZone</a>
-            <span class="text-orange-500 font-bold uppercase text-xs">Capítulo 1</span>
-            <a href="index.html" class="text-white text-xs border border-zinc-700 px-4 py-1 rounded">CERRAR</a>
+    <nav class="reader-nav">
+        <a href="index.html" class="nav-btn">
+            <i class="fas fa-home"></i> Inicio
+        </a>
+        <div class="flex gap-2">
+            <button id="prev-cap" class="nav-btn disabled">
+                <i class="fas fa-arrow-left"></i> Anterior
+            </button>
+            <button id="next-cap" class="nav-btn disabled">
+                Siguiente <i class="fas fa-arrow-right"></i>
+            </button>
         </div>
     </nav>
 
-    <div class="manga-wrapper">
-        <img id="manga-img" src="" alt="Cargando página...">
-    </div>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+        
+        const supabaseUrl = 'https://uupnzgchqvqjxffiunae.supabase.co'
+        const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
+        const _supabase = createClient(supabaseUrl, supabaseKey)
 
-    <script>
-        // 1. Obtener la URL de la barra de direcciones
-        const params = new URLSearchParams(window.location.search);
-        const imagenUrl = params.get('url');
+        // 1. Bloqueo de Teclas Prohibidas (F12, Ctrl+U, etc)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && (e.key === 'u' || e.key === 's' || e.key === 'i' || e.key === 'j') || e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+        });
 
-        // 2. Si existe la URL, ponerla en la imagen
-        if (imagenUrl) {
-            const imgElement = document.getElementById('manga-img');
-            imgElement.src = decodeURIComponent(imagenUrl);
-            
-            // Si la imagen falla al cargar, avisar
-            imgElement.onerror = function() {
-                this.alt = "Error: El enlace de la imagen no es válido o ha expirado.";
-            };
-        } else {
-            document.getElementById('manga-img').alt = "Error: No se recibió ninguna URL.";
+        async function initLector() {
+            const params = new URLSearchParams(window.location.search);
+            const mangaUrl = params.get('url');
+
+            if (!mangaUrl) {
+                document.getElementById('manga-viewer').innerHTML = "No se encontró el capítulo.";
+                return;
+            }
+
+            // Aquí cargamos la imagen (puedes adaptar esto si tienes múltiples imágenes por capítulo)
+            const viewer = document.getElementById('manga-viewer');
+            viewer.innerHTML = `<img src="${mangaUrl}" class="manga-page" alt="Manga Page">`;
+
+            // Lógica para botones Anterior/Siguiente (Opcional si usas tabla Capitulos)
+            // Por ahora, como usas un link directo de ImgBB, estos botones te regresan a detalles.
+            setupNavigation();
         }
+
+        function setupNavigation() {
+            // Ejemplo: El botón siguiente podría llevarte de vuelta para elegir otro
+            const nextBtn = document.getElementById('next-cap');
+            nextBtn.classList.remove('disabled');
+            nextBtn.onclick = () => window.history.back();
+        }
+
+        initLector();
     </script>
 </body>
 </html>
