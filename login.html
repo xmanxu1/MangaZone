@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>MangaZone | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background: #050505; color: white; font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="flex items-center justify-center h-screen">
+
+    <div class="bg-[#111] p-10 rounded-2xl border border-zinc-800 w-full max-w-md">
+        <h2 class="text-3xl font-black text-[#ff6700] mb-6 text-center">BIENVENIDO</h2>
+        
+        <div id="auth-form" class="space-y-4">
+            <input type="email" id="email" placeholder="Correo electrónico" class="w-full bg-[#1a1a1a] border border-zinc-800 p-3 rounded-lg focus:border-[#ff6700] outline-none">
+            <input type="password" id="password" placeholder="Contraseña" class="w-full bg-[#1a1a1a] border border-zinc-800 p-3 rounded-lg focus:border-[#ff6700] outline-none">
+            
+            <button id="btn-login" class="w-full bg-[#ff6700] py-3 rounded-lg font-bold uppercase tracking-widest hover:bg-[#ff4500] transition">Entrar</button>
+            <button id="btn-register" class="w-full text-zinc-500 text-xs font-bold uppercase hover:text-white transition">¿No tienes cuenta? Regístrate</button>
+        </div>
+        <p id="msg" class="mt-4 text-center text-sm"></p>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+        const _supabase = createClient('https://uupnzgchqvqjxffiunae.supabase.co', 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L')
+
+        const emailInp = document.getElementById('email');
+        const passInp = document.getElementById('password');
+        const msg = document.getElementById('msg');
+
+        // Lógica de Login
+        document.getElementById('btn-login').onclick = async () => {
+            const { data, error } = await _supabase.auth.signInWithPassword({
+                email: emailInp.value,
+                password: passInp.value,
+            });
+            if (error) msg.innerText = "Error: " + error.message;
+            else window.location.href = 'index.html';
+        };
+
+        // Lógica de Registro
+        document.getElementById('btn-register').onclick = async () => {
+            const { data, error } = await _supabase.auth.signUp({
+                email: emailInp.value,
+                password: passInp.value,
+            });
+            if (error) msg.innerText = "Error: " + error.message;
+            else msg.innerText = "¡Revisa tu correo o intenta entrar!";
+        };
+    </script>
+</body>
+</html>
