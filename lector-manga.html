@@ -7,11 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; user-select: none; }
+        body { background: #050505; color: white; margin: 0; font-family: 'Inter', sans-serif; user-select: none; }
         #manga-viewer { display: flex; flex-direction: column; align-items: center; padding-bottom: 120px; }
-        .manga-page { max-width: 100%; height: auto; display: block; pointer-events: none; }
-        .reader-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10, 10, 10, 0.98); backdrop-filter: blur(15px); border-top: 1px solid #1a1a1a; padding: 15px; z-index: 1000; display: flex; justify-content: center; align-items: center; gap: 12px; }
-        .nav-btn { background: #151515; color: #a1a1aa; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 11px; text-transform: uppercase; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .manga-page { max-width: 100%; height: auto; display: block; border-bottom: 2px solid #050505; }
+        .reader-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.95); backdrop-filter: blur(15px); padding: 15px; z-index: 1000; display: flex; justify-content: center; align-items: center; gap: 12px; border-top: 1px solid #1a1a1a; }
+        .nav-btn { background: #151515; color: #a1a1aa; padding: 10px 18px; rounded: 8px; font-weight: 700; font-size: 11px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .nav-btn:hover:not(.disabled) { background: #202020; color: white; }
         .btn-center { background: #1a1a1a; color: #ff6700; border: 1px solid rgba(255, 103, 0, 0.2); }
         .nav-btn.disabled { opacity: 0.1; pointer-events: none; }
@@ -20,7 +20,9 @@
 <body oncontextmenu="return false;">
 
     <div id="manga-viewer">
-        <div id="loading-status" class="py-20 text-zinc-700 animate-pulse font-black uppercase tracking-widest">Cargando páginas...</div>
+        <div id="loading" class="py-20 text-zinc-700 animate-pulse font-black uppercase tracking-widest text-center">
+            Cargando páginas...
+        </div>
     </div>
 
     <nav class="reader-nav">
@@ -43,42 +45,39 @@
             const viewer = document.getElementById('manga-viewer');
             
             if (urlRaw) {
+                // Separamos los links por comas (formato que envía Supabase para arrays)
                 const urls = urlRaw.split(',');
-                viewer.innerHTML = urls.map(link => `<img src="${link.trim()}" class="manga-page">`).join('');
+                viewer.innerHTML = urls.map(link => {
+                    // Limpiamos los caracteres raros como [ ] o " si es que quedan
+                    const cleanLink = link.replace(/[\[\]"]/g, "").trim();
+                    return `<img src="${cleanLink}" class="manga-page" loading="lazy">`;
+                }).join('');
             }
 
             if (mangaId && capActual) {
-                checkNavigation();
+                checkNextPrev();
             }
         }
 
-        async function checkNavigation() {
-            // Buscar capítulo SIGUIENTE
-            const { data: next } = await _supabase.from('Capitulos')
-                .select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual + 1).single();
-            
-            if (next) {
-                const btn = document.getElementById('next-cap');
-                btn.classList.remove('disabled');
-                btn.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${next.numero_capitulo}&url=${next.leer_url}`;
+        async function checkNextPrev() {
+            // Siguiente
+            const { data: n } = await _supabase.from('Capitulos').select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual + 1).single();
+            if(n) {
+                const b = document.getElementById('next-cap');
+                b.classList.remove('disabled');
+                b.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${n.numero_capitulo}&url=${n.leer_url}`;
             }
 
-            // Buscar capítulo ANTERIOR
-            const { data: prev } = await _supabase.from('Capitulos')
-                .select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual - 1).single();
-            
-            if (prev) {
-                const btn = document.getElementById('prev-cap');
-                btn.classList.remove('disabled');
-                btn.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${prev.numero_capitulo}&url=${prev.leer_url}`;
+            // Anterior
+            const { data: p } = await _supabase.from('Capitulos').select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual - 1).single();
+            if(p) {
+                const b = document.getElementById('prev-cap');
+                b.classList.remove('disabled');
+                b.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${p.numero_capitulo}&url=${p.leer_url}`;
             }
         }
 
         initLector();
-
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'i' || e.key === 'j') || e.key === 'F12') e.preventDefault();
-        });
     </script>
 </body>
 </html>
