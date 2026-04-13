@@ -2,82 +2,55 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangaZone | Lector</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #050505; color: white; margin: 0; user-select: none; }
-        #manga-viewer { display: flex; flex-direction: column; align-items: center; padding-bottom: 100px; }
-        .manga-page { max-width: 100%; height: auto; display: block; }
-        .reader-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(10,10,10,0.9); backdrop-filter: blur(10px); padding: 15px; display: flex; justify-content: center; gap: 10px; border-top: 1px solid #222; }
-        .nav-btn { background: #1a1a1a; color: #aaa; padding: 10px 20px; border-radius: 8px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .nav-btn.active { color: #ff6700; border: 1px solid #ff6700; }
-        .disabled { opacity: 0.2; pointer-events: none; }
+        body { background: #050505; color: white; margin: 0; }
+        .manga-image { width: 100%; max-width: 800px; display: block; margin: 0 auto; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div id="manga-viewer">
-        <p id="status" class="py-20 text-zinc-600 font-bold uppercase tracking-widest animate-pulse">Cargando...</p>
-    </div>
-
-    <nav class="reader-nav">
-        <a href="index.html" class="nav-btn"><i class="fas fa-home"></i></a>
-        <button id="prev-btn" class="nav-btn disabled">Anterior</button>
-        <button onclick="window.history.back()" class="nav-btn active">Capítulos</button>
-        <button id="next-btn" class="nav-btn disabled">Siguiente</button>
+    <nav class="fixed top-0 w-full bg-black/80 backdrop-blur-md p-4 z-50 flex justify-between items-center border-b border-white/10">
+        <a href="index.html" class="text-[#ff6700] font-black uppercase italic">MangaZone</a>
+        <div id="info-cap" class="text-xs font-bold uppercase tracking-widest text-zinc-400">Cargando...</div>
+        <button onclick="window.history.back()" class="text-white text-xs uppercase font-bold">Volver</button>
     </nav>
 
-    <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-        const _supabase = createClient('https://uupnzgchqvqjxffiunae.supabase.co', 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L')
+    <main id="viewer" class="pt-20 pb-10 px-4">
+        </main>
 
+    <script>
         const params = new URLSearchParams(window.location.search);
-        const mangaId = params.get('mangaId');
-        const capActual = parseFloat(params.get('cap'));
-        const urlParam = params.get('url');
+        const imagesRaw = decodeURIComponent(params.get('images'));
+        const capNum = params.get('cap');
 
-        function initLector() {
-            const viewer = document.getElementById('manga-viewer');
-            if (!urlParam) return;
+        document.getElementById('info-cap').innerText = `Capítulo ${capNum}`;
+
+        function inicializarLector() {
+            const viewer = document.getElementById('viewer');
+            let listaFinal = [];
 
             try {
-                // Limpieza profunda de los links de Supabase
-                let rawData = decodeURIComponent(urlParam);
-                // Si viene como string de array "["link"]", lo limpiamos
-                let cleanData = rawData.replace(/[\[\]"]/g, ""); 
-                let urls = cleanData.split(',');
-
-                viewer.innerHTML = urls.map(link => `
-                    <img src="${link.trim()}" class="manga-page" onerror="this.style.display='none'">
-                `).join('');
+                // Intentamos convertir el texto en una lista (Array)
+                const parsed = JSON.parse(imagesRaw);
+                listaFinal = Array.isArray(parsed) ? parsed : [parsed];
             } catch (e) {
-                viewer.innerHTML = "<p class='py-20 text-red-500'>Error al cargar las imágenes.</p>";
+                // Si no es un JSON válido (es solo una URL de texto), la metemos en una lista
+                listaFinal = [imagesRaw];
             }
 
-            if (mangaId && capActual) checkNav();
-        }
-
-        async function checkNav() {
-            // Siguiente
-            const { data: n } = await _supabase.from('Capitulos').select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual + 1).single();
-            if (n) {
-                const btn = document.getElementById('next-btn');
-                btn.classList.remove('disabled');
-                btn.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${n.numero_capitulo}&url=${encodeURIComponent(JSON.stringify(n.leer_url))}`;
-            }
-
-            // Anterior
-            const { data: p } = await _supabase.from('Capitulos').select('*').eq('manga_id', mangaId).eq('numero_capitulo', capActual - 1).single();
-            if (p) {
-                const btn = document.getElementById('prev-btn');
-                btn.classList.remove('disabled');
-                btn.onclick = () => window.location.href = `lector-manga.html?mangaId=${mangaId}&cap=${p.numero_capitulo}&url=${encodeURIComponent(JSON.stringify(p.leer_url))}`;
+            // Renderizar las imágenes
+            if (listaFinal.length > 0 && listaFinal[0] !== "null") {
+                viewer.innerHTML = listaFinal.map(img => `
+                    <img src="${img}" class="manga-image mb-4 shadow-2xl" loading="lazy">
+                `).join('');
+            } else {
+                viewer.innerHTML = `<div class="text-center py-20 text-zinc-600 uppercase font-black">Error: No hay imágenes en este capítulo.</div>`;
             }
         }
 
-        initLector();
+        inicializarLector();
     </script>
 </body>
 </html>
