@@ -32,7 +32,7 @@
 
     <header id="manga-banner" class="manga-header pb-20">
         <div class="max-w-6xl mx-auto px-6 w-full relative z-10 grid md:grid-cols-[280px_1fr] gap-12 items-center">
-            <img id="manga-portada" src="" class="w-full rounded-[2.5rem] shadow-2xl border border-white/10 hidden md:block">
+            <img id="manga-portada" src="" class="w-full rounded-[2.5rem] shadow-2xl border border-white/10 hidden md:block aspect-[3/4] object-cover">
             
             <div>
                 <h1 id="manga-titulo" class="text-5xl md:text-7xl font-black uppercase italic mb-4 leading-tight text-white">Cargando...</h1>
@@ -73,7 +73,7 @@
                 document.getElementById('manga-portada').src = manga.portada_url;
                 document.getElementById('manga-sinopsis').innerText = manga.sinopsis || "No hay sinopsis disponible.";
                 
-                // NOTACIÓN DE CORCHETES PARA EL BANNER (Crucial para que funcione)
+                // 1. CORRECCIÓN DEL BANNER (Notación de corchetes para espacios)
                 const bannerReal = manga['URL del banner'];
                 const header = document.getElementById('manga-banner');
                 
@@ -92,13 +92,20 @@
             const container = document.getElementById('lista-capitulos');
 
             if (caps && caps.length > 0) {
-                container.innerHTML = caps.map(c => `
-                    <a href="lector-manga.html?mangaId=${mangaId}&cap=${c.numero_capitulo}&url=${encodeURIComponent(JSON.stringify(c.leer_url))}" 
+                container.innerHTML = caps.map(c => {
+                    // 2. CORRECCIÓN DE SEGURIDAD (Convierte el contenido a texto plano para el enlace)
+                    // Esto evita el error de los corchetes "[" detectado en Supabase
+                    const urlData = typeof c.leer_url === 'string' ? c.leer_url : JSON.stringify(c.leer_url);
+
+                    return `
+                    <a href="lector-manga.html?mangaId=${mangaId}&cap=${c.numero_capitulo}&images=${encodeURIComponent(urlData)}" 
                        class="flex items-center justify-between bg-[#0f0f0f] p-6 rounded-[1.5rem] border border-white/5 hover:border-[#ff6700]/30 hover:bg-[#151515] transition-all group">
                         <span class="font-black uppercase tracking-widest text-xs md:text-sm text-zinc-300 group-hover:text-white">Capítulo ${c.numero_capitulo}</span>
                         <i class="fas fa-chevron-right text-zinc-800 group-hover:text-[#ff6700] transition-colors"></i>
-                    </a>
-                `).join('');
+                    </a>`;
+                }).join('');
+            } else {
+                container.innerHTML = `<p class="text-center py-10 text-zinc-600 italic uppercase text-xs font-bold">Próximamente más capítulos</p>`;
             }
         }
 
