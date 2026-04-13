@@ -3,54 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Panel de Control</title>
+    <title>Panel de Carga | MangaZone</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
-        .input-field {
-            background: #111; border: 1px solid #222; padding: 12px;
-            border-radius: 8px; width: 100%; color: white; outline: none;
-        }
-        .input-field:focus { border-color: #ff6700; }
-        .card { background: #0a0a0a; border: 1px solid #1a1a1a; padding: 30px; border-radius: 20px; }
+        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+        input, select { background: #111 !important; border: 1px solid #222 !important; color: white !important; transition: 0.3s; }
+        input:focus, select:focus { border-color: #ff6700 !important; box-shadow: 0 0 15px rgba(255, 103, 0, 0.1); }
+        #auth-overlay { position: fixed; inset: 0; background: #050505; z-index: 1000; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-10">
+<body>
 
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-4xl font-black mb-10 text-[#ff6700] uppercase tracking-tighter italic">Subir Nuevo Capítulo</h1>
-        
-        <div class="card space-y-6">
-            <div>
-                <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">1. Seleccionar Manga</label>
-                <select id="mangaSelect" class="input-field">
-                    <option value="">Cargando mangas...</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">2. Número del Capítulo</label>
-                <input type="number" id="capNumero" class="input-field" placeholder="Ej: 1.5">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">3. Título (Opcional)</label>
-                <input type="text" id="capTitulo" class="input-field" placeholder="Ej: El inicio del fin">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-zinc-500 mb-2 uppercase">4. Link de la Imagen (ImgBB/Directo)</label>
-                <input type="text" id="capUrl" class="input-field" placeholder="https://i.ibb.co/...">
-                <p class="text-[10px] text-zinc-600 mt-2 italic">Sube tu imagen a ImgBB y pega aquí el "Enlace directo".</p>
-            </div>
-
-            <button id="btnSubir" class="w-full bg-[#ff6700] p-4 rounded-xl font-black uppercase tracking-widest hover:bg-orange-600 transition shadow-lg shadow-orange-900/20">
-                Guardar Capítulo
-            </button>
+    <div id="auth-overlay">
+        <div class="text-center">
+            <i class="fas fa-lock text-[#ff6700] text-4xl mb-6"></i>
+            <h2 class="text-xl font-black uppercase tracking-widest mb-4">Acceso Restringido</h2>
+            <input type="password" id="pin-input" placeholder="Introduce el PIN" class="p-4 rounded-xl text-center text-2xl tracking-[1em] w-64 outline-none">
+            <p id="auth-error" class="text-red-500 mt-4 text-xs font-bold uppercase hidden">PIN Incorrecto</p>
         </div>
+    </div>
 
-        <div id="status" class="mt-6 text-center font-bold text-sm"></div>
+    <div class="min-h-screen flex items-center justify-center p-6">
+        <div class="max-w-md w-full glass p-10 rounded-[2.5rem] shadow-2xl">
+            <div class="flex items-center gap-4 mb-8">
+                <div class="w-12 h-12 bg-[#ff6700] rounded-2xl flex items-center justify-center shadow-lg shadow-orange-900/40">
+                    <i class="fas fa-upload text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black uppercase tracking-tighter">Subir Contenido</h1>
+                    <p class="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Base de Datos Supabase</p>
+                </div>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-zinc-600 uppercase mb-2 block ml-1">Manga Destino</label>
+                    <select id="mangaSelect" class="w-full p-4 rounded-2xl outline-none appearance-none">
+                        <option>Cargando lista...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-1">
+                        <label class="text-[10px] font-black text-zinc-600 uppercase mb-2 block ml-1">Capítulo</label>
+                        <input type="number" id="capNum" step="0.1" placeholder="1.0" class="w-full p-4 rounded-2xl outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] font-black text-zinc-600 uppercase mb-2 block ml-1">Nombre (Opcional)</label>
+                        <input type="text" id="capTitulo" placeholder="Ej: La caída" class="w-full p-4 rounded-2xl outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black text-zinc-600 uppercase mb-2 block ml-1">URL de Imagen Directa</label>
+                    <input type="text" id="capUrl" placeholder="https://i.ibb.co/..." class="w-full p-4 rounded-2xl outline-none">
+                </div>
+
+                <button id="btnSubir" class="w-full bg-[#ff6700] py-5 rounded-2xl font-black uppercase tracking-widest mt-4 hover:bg-orange-600 active:scale-95 transition-all shadow-xl shadow-orange-900/20">
+                    Publicar Ahora
+                </button>
+
+                <p id="mensaje" class="text-center text-[10px] font-black uppercase tracking-widest mt-4"></p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -60,54 +77,58 @@
         const supabaseKey = 'sb_publishable_eF1GrETdV8n2iLlaql4-Mw_I6BMkC2L' 
         const _supabase = createClient(supabaseUrl, supabaseKey)
 
-        // Cargar la lista de mangas disponibles
-        async function loadMangas() {
+        // SEGURIDAD: Cambia '1234' por el PIN que tú quieras
+        const SECRET_PIN = '2026'; 
+
+        const pinInput = document.getElementById('pin-input');
+        pinInput.addEventListener('input', () => {
+            if(pinInput.value === SECRET_PIN) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                cargarMangas();
+            } else if(pinInput.value.length >= 4) {
+                document.getElementById('auth-error').classList.remove('hidden');
+                setTimeout(() => pinInput.value = '', 500);
+            }
+        });
+
+        async function cargarMangas() {
             const { data } = await _supabase.from('Mangas').select('id, titulo');
             const select = document.getElementById('mangaSelect');
             if (data) {
-                select.innerHTML = '<option value="">-- Elige un manga --</option>' + 
-                    data.map(m => `<option value="${m.id}">${m.titulo}</option>`).join('');
+                select.innerHTML = data.map(m => `<option value="${m.id}">${m.titulo}</option>`).join('');
             }
         }
 
         document.getElementById('btnSubir').onclick = async () => {
             const mid = document.getElementById('mangaSelect').value;
-            const num = document.getElementById('capNumero').value;
+            const num = document.getElementById('capNum').value;
             const tit = document.getElementById('capTitulo').value;
             const url = document.getElementById('capUrl').value;
-            const status = document.getElementById('status');
+            const msg = document.getElementById('mensaje');
 
-            if(!mid || !num || !url) {
-                status.innerText = "❌ Faltan datos importantes";
-                status.className = "mt-6 text-red-500";
+            if(!num || !url) {
+                msg.className = "text-red-500 text-center uppercase";
+                msg.innerText = "Error: Faltan datos";
                 return;
             }
 
-            status.innerText = "Subiendo...";
+            msg.className = "text-orange-500 animate-pulse text-center uppercase";
+            msg.innerText = "Subiendo a Supabase...";
 
             const { error } = await _supabase.from('Capitulos').insert([
-                { 
-                    manga_id: mid, 
-                    numero_capitulo: parseFloat(num), 
-                    titulo_capitulo: tit, 
-                    leer_url: url 
-                }
+                { manga_id: mid, numero_capitulo: num, titulo_capitulo: tit, leer_url: url }
             ]);
 
             if (error) {
-                status.innerText = "❌ Error: " + error.message;
-                status.className = "mt-6 text-red-500";
+                msg.className = "text-red-500 text-center uppercase";
+                msg.innerText = error.message;
             } else {
-                status.innerText = "✅ ¡Capítulo subido con éxito!";
-                status.className = "mt-6 text-green-500";
-                // Limpiar campos
-                document.getElementById('capNumero').value = '';
-                document.getElementById('capTitulo').value = '';
-                document.getElementById('capUrl').value = '';
+                msg.className = "text-green-500 text-center uppercase";
+                msg.innerText = "✅ Publicado con éxito";
+                document.getElementById('capUrl').value = "";
+                document.getElementById('capNum').value = (parseFloat(num) + 1); // Sugiere el siguiente número
             }
-        };
-
-        loadMangas();
+        }
     </script>
 </body>
 </html>
