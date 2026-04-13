@@ -3,103 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangaZone | Lector</title>
+    <title>MangaZone | Lector Inmersivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
         body { 
-            background: #000; 
+            background: #000; /* Fondo negro puro para máxima inmersión */
             color: white; 
-            margin: 0; 
+            font-family: 'Inter', sans-serif;
+            margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Evita scroll horizontal si la imagen es muy ancha */
         }
 
-        /* CONTENEDOR DE LECTURA VERTICAL */
-        .manga-container {
+        /* CONTENEDOR PRINCIPAL: OCUPA TODO EL ANCHO */
+        .full-width-viewer {
             display: flex;
             flex-direction: column;
             align-items: center;
             width: 100%;
-            padding-top: 60px; /* Espacio para la barra superior */
+            padding: 0; /* Sin paddings laterales */
+            margin: 0;
         }
 
-        /* LA CLAVE: EL TAMAÑO DE LA IMAGEN */
-        .manga-image {
+        /* LA CLAVE: IMAGEN A ANCHO COMPLETO */
+        .manga-page-full {
+            width: 100vw;          /* Ocupa el 100% del ancho de la ventana gráfica */
+            max-width: 100%;       /* Asegura que no se estire más allá de su contenedor en layouts complejos */
+            height: auto !important; /* Mantiene la proporción original, crucial para no cortar */
             display: block;
-            width: 100%;           /* Se adapta al ancho del dispositivo */
-            max-width: 800px;      /* Límite para que no se pixele en PC */
-            height: auto !important; /* FUERZA EL ALTO AUTOMÁTICO PARA NO CORTAR */
-            margin: 0 auto;
-            object-fit: contain;
+            object-fit: cover;     /* Ajusta la imagen para cubrir el área, puede cortar bordes si las proporciones difieren */
+            margin: 0;             /* Sin márgenes */
         }
 
-        /* Separador negro entre páginas */
-        .divider {
-            height: 2px;
-            width: 100%;
-            background: #000;
-        }
-
-        /* Barra de navegación */
-        .nav-reader {
+        /* Navegación superior minimalista y superpuesta */
+        .top-nav {
             position: fixed;
             top: 0;
-            width: 100%;
-            background: rgba(0,0,0,0.9);
-            padding: 15px 25px;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); /* Degradado sutil */
             z-index: 100;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #222;
+            pointer-events: none; /* Deja pasar los clics a la imagen */
+        }
+
+        /* Elementos interactivos de la nav */
+        .nav-item { pointer-events: auto; }
+
+        .btn-back {
+            background: rgba(17, 17, 17, 0.5);
+            backdrop-filter: blur(5px);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            border-color: #ff6700;
+            color: #ff6700;
+            background: rgba(17, 17, 17, 0.8);
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-    <nav class="nav-reader">
-        <div class="text-[#ff6700] font-black italic">MANGAZONE</div>
-        <div id="display-cap" class="text-[10px] uppercase font-bold tracking-widest text-zinc-400">Capítulo</div>
-        <button onclick="window.history.back()" class="text-xs font-bold uppercase hover:text-[#ff6700]">Volver</button>
+    <nav class="top-nav">
+        <a href="index.html" class="nav-item text-[#ff6700] font-black text-xl italic tracking-tighter">MZ</a>
+        <div id="cap-label" class="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500">
+            Capítulo
+        </div>
+        <button onclick="window.history.back()" class="nav-item btn-back">
+            <i class="fas fa-times mr-1"></i> Cerrar
+        </button>
     </nav>
 
-    <main id="manga-viewer" class="manga-container">
-        </main>
+    <main id="manga-viewer" class="full-width-viewer">
+        <div class="py-40 text-zinc-800 font-black uppercase tracking-widest animate-pulse text-xs">
+            Cargando experiencia inmersiva...
+        </div>
+    </main>
 
     <script>
+        // Obtener parámetros
         const params = new URLSearchParams(window.location.search);
-        const imagesRaw = params.get('images') || params.get('url');
-        const capNum = params.get('cap');
+        const imagesData = params.get('images') || params.get('url');
+        const capNumber = params.get('cap');
 
-        document.getElementById('display-cap').innerText = `Capítulo ${capNum}`;
+        // Actualizar info
+        if (capNumber) {
+            document.getElementById('cap-label').innerText = `Capítulo ${capNumber}`;
+        }
 
-        function cargarContenido() {
+        function renderizarLectorInmersivo() {
             const viewer = document.getElementById('manga-viewer');
-            if (!imagesRaw) return;
-
-            let listaLinks = [];
-            const decodedData = decodeURIComponent(imagesRaw);
-
-            try {
-                // Caso 1: Es un Array JSON (fila 6 de tu Supabase)
-                const parsed = JSON.parse(decodedData);
-                listaLinks = Array.isArray(parsed) ? parsed : [parsed];
-            } catch (e) {
-                // Caso 2: Es un link simple (fila 5 de tu Supabase)
-                listaLinks = [decodedData];
+            
+            if (!imagesData || imagesData === "null") {
+                viewer.innerHTML = `<div class="py-40 text-zinc-700 font-bold uppercase text-xs">Contenido no disponible</div>`;
+                return;
             }
 
-            // Renderizar imágenes limpiando caracteres extra como [ ] o " "
-            viewer.innerHTML = listaLinks.map(url => {
-                const linkLimpio = url.replace(/[\[\]"]/g, "").trim();
+            let paginas = [];
+
+            try {
+                // Descodificar y parsear
+                const decoded = decodeURIComponent(imagesData);
+                const parsed = JSON.parse(decoded);
+                paginas = Array.isArray(parsed) ? parsed : [parsed];
+            } catch (e) {
+                // Link directo
+                paginas = [decodeURIComponent(imagesData)];
+            }
+
+            // Renderizado Full-Width
+            viewer.innerHTML = paginas.map(url => {
+                // Limpieza de URL
+                const cleanUrl = url.replace(/["'\[\]]/g, "").trim();
+                
                 return `
-                    <img src="${linkLimpio}" class="manga-image" loading="lazy">
-                    <div class="divider"></div>
+                    <img src="${cleanUrl}" 
+                         class="manga-page-full" 
+                         loading="lazy" 
+                         alt="Página de Manga Inmersiva">
                 `;
             }).join('');
         }
 
-        window.onload = cargarContenido;
+        window.onload = renderizarLectorInmersivo;
     </script>
 </body>
 </html>
